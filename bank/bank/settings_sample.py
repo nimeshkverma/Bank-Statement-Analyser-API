@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
+    'rest_framework',
+    'statements.apps.StatementsConfig',
+    'common.apps.CommonConfig',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -48,9 +52,6 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django_extensions',
-    'rest_framework',
-    # 'common.apps.CommonConfig',
 ]
 
 ROOT_URLCONF = 'bank.urls'
@@ -183,8 +184,8 @@ BROKER_TRANSPORT = 'sqs'
 BROKER_TRANSPORT_OPTIONS = {
     'region': 'region',
 }
-BROKER_USER = AWS_ACCESS_KEY_ID
-BROKER_PASSWORD = AWS_SECRET_ACCESS_KEY
+BROKER_USER = 'AWS_ACCESS_KEY_ID'
+BROKER_PASSWORD = 'AWS_SECRET_ACCESS_KEY'
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 AWS_S3_ACCESS_KEY_ID = 'AWS_S3_ACCESS_KEY_ID'
