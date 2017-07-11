@@ -142,8 +142,10 @@ class BankStatementsAnalyser(object):
         self.db = Database('backend_db')
         self.bank_pdf_s3_url = None
         self.bank_pdf_password = None
+        self.loan_details = {}
         self.pwd = self.__pwd()
         self.__set_bank_pdf_details()
+        self.__set_loan_details()
         self.bank_pdf_path = self.__get_bank_pdf_path()
         self.bank_statements = self.__get_bank_statements()
         self.bank_data = self.__get_bank_data()
@@ -172,7 +174,7 @@ class BankStatementsAnalyser(object):
             pass
         return pwd
 
-    def __get_sql_query(self):
+    def __get_bank_details_sql_query(self):
         return """
                      SELECT  document_1, document_1_password
                      FROM customer_documents
@@ -180,12 +182,30 @@ class BankStatementsAnalyser(object):
                """.format(customer_id=self.customer_id, document_type_id=self.document_type_id)
 
     def __set_bank_pdf_details(self):
-        query = self.__get_sql_query()
+        query = self.__get_bank_details_sql_query()
         rows = self.db.execute_query(query)
         for row in rows:
             self.bank_pdf_s3_url = settings.S3_URL + str(row['document_1'])
             self.bank_pdf_password = row['document_1_password'] if row[
                 'document_1_password'] else ''
+            break
+
+    def __get_loan_details_sql_query(self):
+        return """
+                select loan_emi, loan_amount, monthly_income, existing_emi, loan_tenure 
+                from loan_product where customer_id={customer_id};
+               """.format(customer_id=self.customer_id)
+
+    def __set_loan_details(self):
+        query = self.__get_loan_details_sql_query()
+        rows = self.db.execute_query(query)
+        for row in rows:
+            self.loan_details = {
+                'loan_emi': row['loan_emi'],
+                'loan_amount': row['loan_amount'],
+                'existing_emi': row['existing_emi'],
+                'loan_tenure': row['loan_tenure'],
+            }
             break
 
     def __get_bank_pdf_path(self):
@@ -202,8 +222,10 @@ class BankStatementsAnalyser(object):
 
     def __get_bank_data(self):
         data = {
+            'loan_details': self.loan_details,
             'all_day_transactions': {},
             'stats': {},
+            'above_emi_balance_data': {},
             'bank_name': None,
         }
         if self.bank_statements and self.bank_statements.specific_bank:
@@ -216,4 +238,13 @@ class BankStatementsAnalyser(object):
                     data['stats'][stats_key] = stats_value.strftime("%d/%m/%y")
                 else:
                     data['stats'][stats_key] = stats_value
+            above_emi_balance_data = self.bank_statements.specific_bank.get_days_above_given_balance(
+                float(self.loan_details.get('loan_emi', 0)))
+            below_above_balance_daywise = {}
+            for day_key, day_value in above_emi_balance_data.get('below_above_balance_daywise', {}).iteritems():
+                below_above_balance_daywise[
+                    day_key.strftime("%d/%m/%y")] = day_value
+            above_emi_balance_data[
+                'above_emi_daywise_balance'] = below_above_balance_daywise
+            data['above_emi_balance_data'] = above_emi_balance_data
         return data
