@@ -246,5 +246,6 @@ class BankStatementsAnalyser(object):
                     day_key.strftime("%d/%m/%y")] = day_value
             above_emi_balance_data[
                 'above_emi_daywise_balance'] = below_above_balance_daywise
+            above_emi_balance_data.pop('below_above_balance_daywise')
             data['above_emi_balance_data'] = above_emi_balance_data
         return data
