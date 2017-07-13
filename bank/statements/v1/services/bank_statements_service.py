@@ -223,29 +223,9 @@ class BankStatementsAnalyser(object):
     def __get_bank_data(self):
         data = {
             'loan_details': self.loan_details,
-            'all_day_transactions': {},
-            'stats': {},
-            'above_emi_balance_data': {},
-            'bank_name': None,
         }
         if self.bank_statements and self.bank_statements.specific_bank:
             data['bank_name'] = self.bank_statements.bank_name
-            for date, balance in self.bank_statements.specific_bank.all_day_transactions.iteritems():
-                data['all_day_transactions'][
-                    date.strftime("%d/%m/%y")] = balance
-            for stats_key, stats_value in self.bank_statements.specific_bank.stats.iteritems():
-                if type(stats_value) == datetime.datetime:
-                    data['stats'][stats_key] = stats_value.strftime("%d/%m/%y")
-                else:
-                    data['stats'][stats_key] = stats_value
-            above_emi_balance_data = self.bank_statements.specific_bank.get_days_above_given_balance(
-                float(self.loan_details.get('loan_emi', 0)))
-            below_above_balance_daywise = {}
-            for day_key, day_value in above_emi_balance_data.get('below_above_balance_daywise', {}).iteritems():
-                below_above_balance_daywise[
-                    day_key.strftime("%d/%m/%y")] = day_value
-            above_emi_balance_data[
-                'above_emi_daywise_balance'] = below_above_balance_daywise
-            above_emi_balance_data.pop('below_above_balance_daywise')
-            data['above_emi_balance_data'] = above_emi_balance_data
+            data.update(self.bank_statements.specific_bank.data_json(
+                self.loan_details.get('loan_emi', 0)))
         return data

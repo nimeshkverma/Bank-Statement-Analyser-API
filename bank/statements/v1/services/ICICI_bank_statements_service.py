@@ -1,5 +1,6 @@
 import re
 import datetime
+from copy import deepcopy
 
 MIN_COLUMNS = 8
 MAX_COLUMNS = 9
@@ -126,7 +127,7 @@ class ICICIBankStatements(object):
         return {
             'given_balance': given_balance,
             'no_of_days': len(above_given_balance_daywise),
-            'below_above_balance_daywise': above_given_balance_daywise,
+            'above_balance_daywise': above_given_balance_daywise,
         }
 
     def get_days_above_given_balance(self, given_balance):
@@ -137,9 +138,65 @@ class ICICIBankStatements(object):
         return {
             'given_balance': given_balance,
             'no_of_days': len(above_given_balance_daywise),
-            'below_above_balance_daywise': above_given_balance_daywise,
+            'above_balance_daywise': above_given_balance_daywise,
         }
 
     def __set_stats(self):
         self.stats['average_balance'] = round(sum(
             self.all_day_transactions.values()) / len(self.all_day_transactions.values()), 2)
+
+    def __json_statements(self):
+        statements = deepcopy(self.statements)
+        for statement in statements:
+            for key in ['value_date', 'transaction_date']:
+                statement[key] = statement[key].strftime("%d/%m/%y")
+        return statement
+
+    def __json_transactions(self):
+        transactions = {}
+        for day, balance in transactions.iteritems():
+            transactions[day.strftime("%d/%m/%y")] = balance
+        return transactions
+
+    def __json_stats(self):
+        stats = {}
+        for key, value in self.stats.iteritems():
+            if type(value) == datetime.datetime:
+                stats[key] = value.strftime("%d/%m/%y")
+            else:
+                stats[key] = value
+        return stats
+
+    def __json_days_above_given_balance(self, threshhold):
+        days_above_given_balance = self.get_days_above_given_balance(
+            threshhold)
+        above_balance_daywise = days_above_given_balance.pop(
+            'above_balance_daywise', {})
+        for day, balance in above_balance_daywise.intersection():
+            days_above_given_balance['above_balance_daywise'][
+                day.strftime("%d/%m/%y")] = balance
+        return days_above_given_balance
+
+    def __json_monthly_stats(self, threshhold):
+        monthly_stats = {}
+        for day, balance in self.all_day_transactions.iteritems():
+            if monthly_stats.get(day.month):
+                monthly_stats[day.month]['all_day_count'] += 1
+                monthly_stats[day.month]['balance_above_day_count'] = monthly_stats[day.month][
+                    'balance_above_day_count'] + 1 if balance >= threshhold else monthly_stats[day.month]['balance_above_day_count']
+            else:
+                monthly_stats[day.month] = {
+                    'all_day_count': 1,
+                    'balance_above_day_count': 1 if balance >= threshhold else 0,
+                }
+        return monthly_stats
+
+    def data_json(self, threshhold):
+        data = {
+            'raw_statements': self.__json_statements(),
+            'all_transactions': self.__json_transactions(),
+            'stats': self.__json_stats(),
+            'above_emi_balance_data': self.__json_days_above_given_balance(),
+            'monthly_stats': self.__json_monthly_stats(),
+            'bank_name': 'ICICI',
+        }
