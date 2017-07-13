@@ -178,15 +178,17 @@ class HDFCBankStatements(object):
             len(self.all_day_transactions.values()), 2)
 
     def __json_statements(self):
-        statements = deepcopy(self.statements)
-        for statement in statements:
+        statements = []
+        for statement in self.statements:
             for key in ['value_date', 'transaction_date']:
-                statement[key] = statement[key].strftime("%d/%m/%y")
+                data = deepcopy(statement)
+                data[key] = data[key].strftime("%d/%m/%y")
+                statements.append(data)
         return statement
 
     def __json_transactions(self):
         transactions = {}
-        for day, balance in transactions.iteritems():
+        for day, balance in self.all_day_transactions.iteritems():
             transactions[day.strftime("%d/%m/%y")] = balance
         return transactions
 

@@ -146,15 +146,17 @@ class ICICIBankStatements(object):
             self.all_day_transactions.values()) / len(self.all_day_transactions.values()), 2)
 
     def __json_statements(self):
-        statements = deepcopy(self.statements)
-        for statement in statements:
+        statements = []
+        for statement in self.statements:
             for key in ['value_date', 'transaction_date']:
-                statement[key] = statement[key].strftime("%d/%m/%y")
+                data = deepcopy(statement)
+                data[key] = data[key].strftime("%d/%m/%y")
+                statements.append(data)
         return statement
 
     def __json_transactions(self):
         transactions = {}
-        for day, balance in transactions.iteritems():
+        for day, balance in self.all_day_transactions.iteritems():
             transactions[day.strftime("%d/%m/%y")] = balance
         return transactions
 
@@ -172,7 +174,8 @@ class ICICIBankStatements(object):
             threshhold)
         above_balance_daywise = days_above_given_balance.pop(
             'above_balance_daywise', {})
-        for day, balance in above_balance_daywise.intersection():
+        days_above_given_balance['above_balance_daywise'] = {}
+        for day, balance in above_balance_daywise.iteritems():
             days_above_given_balance['above_balance_daywise'][
                 day.strftime("%d/%m/%y")] = balance
         return days_above_given_balance
@@ -196,7 +199,8 @@ class ICICIBankStatements(object):
             'raw_statements': self.__json_statements(),
             'all_transactions': self.__json_transactions(),
             'stats': self.__json_stats(),
-            'above_emi_balance_data': self.__json_days_above_given_balance(),
-            'monthly_stats': self.__json_monthly_stats(),
+            'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
+            'monthly_stats': self.__json_monthly_stats(threshhold),
             'bank_name': 'ICICI',
         }
+        return data
