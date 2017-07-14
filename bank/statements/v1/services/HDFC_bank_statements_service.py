@@ -107,7 +107,6 @@ class HDFCBankStatements(object):
             all_date_list) if all_date_list else self.stats['end_date']
         self.stats['days'] = (self.stats['pdf_text_end_date'] -
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
-        print self.stats
 
     def __get_first_day_balance(self):
         opening_balance = None
@@ -184,7 +183,7 @@ class HDFCBankStatements(object):
                 data = deepcopy(statement)
                 data[key] = data[key].strftime("%d/%m/%y")
                 statements.append(data)
-        return statement
+        return statements
 
     def __json_transactions(self):
         transactions = {}

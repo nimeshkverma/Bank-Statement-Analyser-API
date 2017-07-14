@@ -68,6 +68,7 @@ python-dateutil==2.6.0
 pytz==2017.2
 pyzmq==16.0.2
 qtconsole==4.3.0
+redis==2.10.5
 requests==2.12.5
 requests-toolbelt==0.7.1
 scandir==1.5

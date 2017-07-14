@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
+from .celery import app as celery_app
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -166,41 +167,33 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_IMPORTS = [
+    "statements.v1.tasks",
+]
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = 'upwardstech@gmail.com'
+SERVER_EMAIL = 'SERVER_EMAIL'
+RECIEVER_EMAILS = [
+    'RECIEVER_EMAILS1',
+    'RECIEVER_EMAILS2'
+]
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'EMAIL_HOST_USER'
+EMAIL_HOST_PASSWORD = 'EMAIL_HOST_PASSWORD'
+EMAIL_USE_TLS = True
 
-CELERY_DEFAULT_QUEUE = 'sqs_queue_name'
-CELERY_QUEUES = {
-    CELERY_DEFAULT_QUEUE: {
-        'exchange': CELERY_DEFAULT_QUEUE,
-        'binding_key': CELERY_DEFAULT_QUEUE,
-    }
-}
-
-BROKER_TRANSPORT = 'sqs'
-BROKER_TRANSPORT_OPTIONS = {
-    'region': 'region',
-}
-BROKER_USER = 'AWS_ACCESS_KEY_ID'
-BROKER_PASSWORD = 'AWS_SECRET_ACCESS_KEY'
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-AWS_S3_ACCESS_KEY_ID = 'AWS_S3_ACCESS_KEY_ID'
-AWS_S3_SECRET_ACCESS_KEY = 'AWS_S3_SECRET_ACCESS_KEY'
-AWS_STORAGE_BUCKET_NAME = 'AWS_STORAGE_BUCKET_NAME'
 S3_URL = "S3_URL"
-PDF_CONVERSION = {
-    'zoom': 4
-}
+
 
 THIRTY_PARTY_SECRETS = {
-    'borrower_leads': {
-        'borrower_leads_username': 'borrower_leads_token',
-    },
-    'admin': {
-        'admin_username': 'admin_token'
+    'third_party': {
+        'user': 'password',
     }
 }

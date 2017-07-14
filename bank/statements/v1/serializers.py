@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from services.bank_statements_service import BankStatementsAnalyser
+from tasks import send_bank_statement_analysis_mail
 
 
 class StatementAnalyserSerializer(serializers.Serializer):
@@ -7,4 +7,8 @@ class StatementAnalyserSerializer(serializers.Serializer):
     document_type_id = serializers.IntegerField()
 
     def bank_data(self):
-        return BankStatementsAnalyser(self.validated_data['customer_id'], self.validated_data['document_type_id']).bank_data
+        send_bank_statement_analysis_mail.delay(self.validated_data)
+
+        return {
+            "email": "sent"
+        }

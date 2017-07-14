@@ -221,7 +221,7 @@ class SBIBankStatements(object):
                 data = deepcopy(statement)
                 data[key] = data[key].strftime("%d/%m/%y")
                 statements.append(data)
-        return statement
+        return statements
 
     def __json_transactions(self):
         transactions = {}

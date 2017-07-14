@@ -1,9 +1,12 @@
+import os
 import subprocess
 import re
 import uuid
 import requests
 import json
 import datetime
+import csv
+from copy import deepcopy
 from cStringIO import StringIO
 
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
@@ -19,6 +22,7 @@ from HDFC_bank_statements_service import HDFCBankStatements
 from AXIS_bank_statements_service import AXISBankStatements
 from SBI_bank_statements_service import SBIBankStatements
 from database_service import Database
+from email_service import send_mail
 
 
 class BankStatements(object):
@@ -143,6 +147,7 @@ class BankStatementsAnalyser(object):
         self.bank_pdf_s3_url = None
         self.bank_pdf_password = None
         self.loan_details = {}
+        self.template = 'statements/v1/bank_statement_analysis_email.html'
         self.pwd = self.__pwd()
         self.__set_bank_pdf_details()
         self.__set_loan_details()
@@ -192,7 +197,7 @@ class BankStatementsAnalyser(object):
 
     def __get_loan_details_sql_query(self):
         return """
-                select loan_emi, loan_amount, monthly_income, existing_emi, loan_tenure 
+                select loan_emi, loan_amount, monthly_income, existing_emi, loan_tenure
                 from loan_product where customer_id={customer_id};
                """.format(customer_id=self.customer_id)
 
@@ -229,3 +234,52 @@ class BankStatementsAnalyser(object):
             data.update(self.bank_statements.specific_bank.data_json(
                 self.loan_details.get('loan_emi', 0)))
         return data
+
+    def __create_bank_statement_csv(self):
+        csv_name = "{pwd}/Customer :{customer_id} Bank :{bank}.csv".format(
+            pwd=self.pwd, customer_id=self.customer_id, bank=self.bank_data['bank_name'])
+        with open(csv_name, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(['Attribute Name', 'Value'])
+            for loan_detail_key, loan_detail_value in self.bank_data['loan_details'].iteritems():
+                writer.writerow([loan_detail_key, loan_detail_value])
+            for stats_key, stats_value in self.bank_data['stats'].iteritems():
+                writer.writerow([stats_key, stats_value])
+
+            writer.writerow(['', ''])
+            writer.writerow(
+                ['Month-Year', 'No of day Balance is above EMI', 'No of days Analysed'])
+            for monthly_stats_key, monthly_stats_value in self.bank_data['monthly_stats'].iteritems():
+                writer.writerow([monthly_stats_key, monthly_stats_value[
+                                'balance_above_day_count'], monthly_stats_value['all_day_count']])
+
+            for i in xrange(0, 25 - len(self.bank_data['monthly_stats'])):
+                writer.writerow([''])
+
+            writer.writerow(['', ''])
+            writer.writerow(['Date', 'Balance'])
+            for transaction_key, transaction_value in self.bank_data['all_transactions'].iteritems():
+                writer.writerow([transaction_key, transaction_value])
+        return csv_name
+
+    def __remove_file(self, file_path):
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    def send_bank_analysis_email(self):
+        csvfile = self.__create_bank_statement_csv()
+        email_data = {
+            'data': {
+                'customer_id': self.customer_id,
+                'bank': self.bank_data['bank_name'],
+            }
+        }
+        email_details = {
+            'data': email_data,
+            'subject': "Customer:{customer_id} Bank:{bank} Statements Analysis".format(customer_id=self.customer_id, bank=self.bank_data['bank_name']),
+            'body': "Empty",
+            'sender_email_id': settings.SERVER_EMAIL,
+            'reciever_email_ids': settings.RECIEVER_EMAILS,
+        }
+        send_mail(email_details, self.template, [csvfile])
+        self.__remove_file(csvfile)
