@@ -236,7 +236,7 @@ class BankStatementsAnalyser(object):
         return data
 
     def __create_bank_statement_csv(self):
-        csv_name = "{pwd}/Customer :{customer_id} Bank :{bank}.csv".format(
+        csv_name = "{pwd}/Customer{customer_id}_Bank_{bank}.csv".format(
             pwd=self.pwd, customer_id=self.customer_id, bank=self.bank_data['bank_name'])
         with open(csv_name, 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
