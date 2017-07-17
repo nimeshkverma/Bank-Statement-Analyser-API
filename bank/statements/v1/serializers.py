@@ -8,7 +8,6 @@ class StatementAnalyserSerializer(serializers.Serializer):
 
     def bank_data(self):
         send_bank_statement_analysis_mail.delay(self.validated_data)
-
         return {
             "email": "sent"
         }

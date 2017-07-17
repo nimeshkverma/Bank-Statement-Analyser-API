@@ -95,7 +95,7 @@ class ICICIBankStatements(object):
         all_day_transactions[self.stats[
             'pdf_text_start_date']] = self.__get_first_day_balance()
         for day_no in xrange(1, self.stats['days']):
-            day_date = self.stats['start_date'] + \
+            day_date = self.stats['pdf_text_start_date'] + \
                 datetime.timedelta(days=day_no)
             all_day_transactions[day_date] = self.transactions[day_date] if self.transactions.get(
                 day_date) else all_day_transactions[day_date - datetime.timedelta(days=1)]
