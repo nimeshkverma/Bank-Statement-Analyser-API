@@ -191,6 +191,12 @@ EMAIL_USE_TLS = True
 
 S3_URL = "S3_URL"
 
+DYNAMO_DATA_DUMP = {
+    "url": "url",
+    "auth_key": "auth_key",
+    "auth_value": "auth_value"
+}
+
 
 THIRTY_PARTY_SECRETS = {
     'third_party': {

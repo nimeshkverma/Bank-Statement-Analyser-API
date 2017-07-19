@@ -6,6 +6,8 @@ from . import views
 urlpatterns = [
     url(r'^bank/statement_analyser/$',
         views.StatementAnalyserDetails.as_view(), name='StatementAnalyserDetails'),
+    url(r'^bank/statement_analyser_data_dump/$',
+        views.StatementAnalyseDumperDetails.as_view(), name='StatementAnalyseDumperDetails'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
