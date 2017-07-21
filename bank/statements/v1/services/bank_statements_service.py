@@ -17,7 +17,8 @@ from pdfminer.pdfpage import PDFPage
 from tabula import read_pdf
 from django.conf import settings
 
-from ICICI_bank_statements_service import ICICIBankStatements
+from ICICI_bank_statements_a_service import ICICIBankStatementsA
+from ICICI_bank_statements_b_service import ICICIBankStatementsB
 from HDFC_bank_statements_service import HDFCBankStatements
 from AXIS_bank_statements_service import AXISBankStatements
 from SBI_bank_statements_service import SBIBankStatements
@@ -41,9 +42,13 @@ class BankStatements(object):
             'output_format': 'json',
         }
         self.bank_dict = {
-            'icici': {
+            'icici_a': {
                 'unique_header': 'Transaction Remarks',
-                'class': ICICIBankStatements,
+                'class': ICICIBankStatementsA,
+            },
+            'icici_b': {
+                'unique_header': 'ACCOUNT TYPE',
+                'class': ICICIBankStatementsB,
             },
             'hdfc': {
                 'unique_header': 'Narration',
@@ -58,7 +63,7 @@ class BankStatements(object):
                 'class': SBIBankStatements,
             }
         }
-        self.banks = ['icici', 'hdfc', 'axis', 'sbi']
+        self.banks = ['icici_a', 'hdfc', 'axis', 'sbi', 'icici_b']
         self.pdf_json = self.__get_pdf_json()
         self.raw_table_data = self.__get_raw_table_data()
         self.pdf_text = self.__get_pdf_text()

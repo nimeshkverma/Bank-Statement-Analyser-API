@@ -12,7 +12,7 @@ MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class ICICIBankStatements(object):
+class ICICIBankStatementsA(object):
     """Class to analyse the data obtained from ICICI Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
