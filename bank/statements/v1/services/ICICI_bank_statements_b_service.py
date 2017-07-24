@@ -4,6 +4,9 @@ from copy import deepcopy
 
 MIN_COLUMNS = 2
 MAX_COLUMNS = 9
+MIN_WITHDRAWDEPOSIT_COLUMNS = 3
+MIN_WITHDRAWDEPOSIT_PARTICULAR_COLUMNS = 4
+MIN_WITHDRAWDEPOSIT_PARTICULAR_MODE_COLUMNS = 5
 
 HEADER = set(['DATE MODE', 'DATE MODE**', 'PARTICULARS', 'DEPOSITS', 'WITHDRAWALS',
               'BALANCE', 'Withdrawal Amount', 'Deposit Amount', 'Balance (INR )'])
@@ -49,10 +52,23 @@ class ICICIBankStatementsB(object):
         statement_dict = {}
         try:
             statement_dict = {
-
                 'transaction_date': self.__get_date(data_list[0]),
                 'balance': self.__get_amount(data_list[-1]),
             }
+            if len(data_list) == MIN_WITHDRAWDEPOSIT_COLUMNS:
+                statement_dict['withdraw_deposit'] = self.__get_amount(
+                    data_list[-2])
+            elif len(data_list) == MIN_WITHDRAWDEPOSIT_PARTICULAR_COLUMNS:
+                statement_dict['withdraw_deposit'] = self.__get_amount(
+                    data_list[-2])
+                statement_dict['particulars'] = data_list[-3]
+            elif len(data_list) >= MIN_WITHDRAWDEPOSIT_PARTICULAR_MODE_COLUMNS:
+                statement_dict['withdraw_deposit'] = self.__get_amount(
+                    data_list[-2])
+                statement_dict['particulars'] = data_list[-3]
+                statement_dict['mode'] = data_list[-4]
+            else:
+                pass
             if statement_dict:
                 self.transactions[statement_dict[
                     'transaction_date']] = statement_dict['balance']
