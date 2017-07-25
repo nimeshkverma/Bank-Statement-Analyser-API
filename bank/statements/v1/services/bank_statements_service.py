@@ -20,7 +20,8 @@ import re
 from ICICI_bank_statements_a_service import ICICIBankStatementsA
 from ICICI_bank_statements_b_service import ICICIBankStatementsB
 from HDFC_bank_statements_service import HDFCBankStatements
-from AXIS_bank_statements_service import AXISBankStatements
+from AXIS_bank_statements_a_service import AXISBankStatementsA
+from AXIS_bank_statements_b_service import AXISBankStatementsB
 from SBI_bank_statements_service import SBIBankStatements
 
 from database_service import Database
@@ -145,16 +146,20 @@ class BankStatements(object):
                 'unique_header': 'Narration',
                 'class': HDFCBankStatements,
             },
-            'axis': {
+            'axis_a': {
                 'unique_header': 'Particulars',
-                'class': AXISBankStatements,
+                'class': AXISBankStatementsA,
+            },
+            'axis_b': {
+                'unique_header': 'Bank Account',
+                'class': AXISBankStatementsB,
             },
             'sbi': {
                 'unique_header': 'Description',
                 'class': SBIBankStatements,
             }
         }
-        self.banks = ['icici_a', 'hdfc', 'axis', 'sbi', 'icici_b']
+        self.banks = ['icici_a', 'hdfc', 'axis_a', 'axis_b', 'sbi', 'icici_b']
         self.bank_name = None
         self.specific_bank = self.__get_specific_bank()
 
