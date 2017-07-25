@@ -3,7 +3,7 @@ import datetime
 from copy import deepcopy
 
 MIN_COLUMNS = 5
-MAX_COLUMNS = 5
+MAX_COLUMNS = 7
 
 HEADER = set(['Tran Date', 'Chq No', 'Particulars',
               'Debit', 'Credit', 'Balance', 'Init.'])
@@ -33,6 +33,11 @@ class AXISBankStatements(object):
             is_date = True
         except Exception as e:
             pass
+        try:
+            datetime.datetime.strptime(input_string, "%d %b '%y")
+            is_date = True
+        except Exception as e:
+            pass
         return is_date
 
     def __get_amount(self, input_string):
@@ -42,22 +47,30 @@ class AXISBankStatements(object):
         except Exception as e:
             return 0.0
 
-    def __deconcatinate_numbers(self, input_string):
-        number_list = input_string.split(' ')
-        if len(number_list) == 2:
-            for index in xrange(0, len(number_list)):
-                number_list[index] = self.__get_amount(number_list[index])
-            return number_list
-        return [0.0, 0.0]
+    def __get_date(self, date_input):
+        try:
+            return datetime.datetime.strptime(date_input, '%d-%m-%Y')
+        except Exception as e:
+            pass
+        return datetime.datetime.strptime(date_input, "%d %b '%y")
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
             if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
                 statement_dict = {
-                    'transaction_date': datetime.datetime.strptime(data_list[0], '%d-%m-%Y'),
-                    'cheque_no': data_list[-4],
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'particulars': data_list[-4],
                     'withdraw_deposit': self.__get_amount(data_list[-3]),
+                    'balance': self.__get_amount(data_list[-2]),
+                    'init_bank': data_list[-1],
+                }
+            elif len(data_list) > MIN_COLUMNS and len(data_list) <= MAX_COLUMNS and self.__is_date(data_list[0]):
+                statement_dict = {
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'particulars': data_list[-5],
+                    'withdraw': self.__get_amount(data_list[-4]),
+                    'deposit': self.__get_amount(data_list[-3]),
                     'balance': self.__get_amount(data_list[-2]),
                     'init_bank': data_list[-1],
                 }
@@ -78,10 +91,10 @@ class AXISBankStatements(object):
 
     def __get_pdf_dates(self):
         from_string_date_list = re.findall(
-            r'(From : \d{2}-\d{2}-\d{4})', self.pdf_text)
+            r'(From\s?: \d{2}-\d{2}-\d{4})', self.pdf_text)
         to_string_date_list = re.findall(
-            r'(To : \d{2}-\d{2}-\d{4})', self.pdf_text)
-        return [string_date.partition('From : ')[2] for string_date in from_string_date_list] + [string_date.partition('To : ')[2] for string_date in to_string_date_list]
+            r'(To\s?: \d{2}-\d{2}-\d{4})', self.pdf_text)
+        return [string_date.partition(r'From\s?: ')[2] for string_date in from_string_date_list] + [string_date.partition(r'To :\s?')[2] for string_date in to_string_date_list]
 
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
@@ -169,8 +182,9 @@ class AXISBankStatements(object):
             data = deepcopy(statement)
             for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdraw_deposit', 'balance']:
-                data[key] = str(data[key])
+            for key in ['withdraw', 'deposit', 'balance', 'withdraw_deposit']:
+                if data.get(key):
+                    data[key] = str(data[key])
             statements.append(data)
         return statements
 
