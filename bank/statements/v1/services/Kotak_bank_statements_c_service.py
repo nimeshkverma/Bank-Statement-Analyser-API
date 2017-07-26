@@ -2,17 +2,15 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 4
-MAX_COLUMNS = 5
+MIN_COLUMNS = 8
+MAX_COLUMNS = 8
 
-HEADER = set(['Date', 'Narration Chq/Ref No', 'Withdrawal (Dr)/Deposit (Cr)',
-              'Withdrawal (Dr)/', 'Balance', 'Narration', 'Chq/Ref No'])
-
+HEADER = set(['Sl. No.', 'Date', 'Description', 'Chq / Ref number', 'Amount', 'Dr / Cr', 'Balance', 'Dr / Cr'])
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class KotakBankStatementsA(object):
+class KotakBankStatementsC(object):
     """Class to analyse the data obtained from AXIS Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
@@ -28,7 +26,7 @@ class KotakBankStatementsA(object):
 
     def __get_amount(self, input_string):
         raw_amount = input_string
-        for to_be_replaced in ['(Cr)', '(Dr)', ',']:
+        for to_be_replaced in [',']:
             raw_amount = raw_amount.replace(to_be_replaced, '')
         try:
             return float(raw_amount)
@@ -36,30 +34,22 @@ class KotakBankStatementsA(object):
             return 0.0
 
     def __get_date(self, date_input):
-        all_string_date_list = re.findall(
-            r'(\d{2}-\d{2}-\d{4})', date_input)
-        all_date_list = []
-        for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d-%m-%Y'))
-            except Exception as e:
-                pass
-        return all_date_list[0]
+        return datetime.datetime.strptime(date_input, '%d/%m/%Y')
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
             statement_dict = {
-                'transaction_date': self.__get_date(data_list[0]),
-                'narration': data_list[1],
+                'transaction_date': self.__get_date(data_list[1]),
+                'description': data_list[2],
+                'cheque_ref': data_list[3],
                 'transaction_type': '',
-                'withdraw_deposit': self.__get_amount(data_list[-2]),
-                'balance': self.__get_amount(data_list[-1]),
+                'withdraw_deposit': self.__get_amount(data_list[-4]),
+                'balance': self.__get_amount(data_list[-2]),
             }
-            if 'Dr' in data_list[-2]:
+            if 'DR' in data_list[-3]:
                 statement_dict['transaction_type'] = 'withdraw'
-            elif 'Cr' in data_list[-2]:
+            elif 'CR' in data_list[-3]:
                 statement_dict['transaction_type'] = 'deposit'
             else:
                 pass
@@ -80,10 +70,11 @@ class KotakBankStatementsA(object):
 
     def __get_pdf_dates(self):
         from_to_string_date_list = re.findall(
-            r'(\d{2}-\d{2}-\d{4} to \d{2}-\d{2}-\d{4})', self.pdf_text)
+            r'(From \d{2}/\d{2}/\d{4} To \d{2}/\d{2}/\d{4})', self.pdf_text)
         pdf_dates = []
         for string_date in from_to_string_date_list:
-            pdf_dates += string_date.split(' to ')
+            for string_date_part in string_date.split(' To '):
+                pdf_dates.append(string_date_part.replace("From ", ""))
         return pdf_dates
 
     def __set_pdf_text_stats(self):
@@ -94,7 +85,7 @@ class KotakBankStatementsA(object):
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d-%m-%Y'))
+                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
             except Exception as e:
                 pass
         self.stats['pdf_text_start_date'] = min(
@@ -107,10 +98,10 @@ class KotakBankStatementsA(object):
     def __get_first_day_balance(self):
         opening_balance = None
         if self.statements:
-            if self.statements[0]['transaction_type'] == 'withdraw':
+            if self.statements[-1]['transaction_type'] == 'withdraw':
                 opening_balance = self.statements[0][
                     'balance'] + self.statements[0]['withdraw_deposit']
-            elif self.statements[0]['transaction_type'] == 'deposit':
+            elif self.statements[-1]['transaction_type'] == 'deposit':
                 opening_balance = self.statements[0][
                     'balance'] - self.statements[0]['withdraw_deposit']
             else:
@@ -233,6 +224,6 @@ class KotakBankStatementsA(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'KOTAK Type A',
+            'bank_name': 'KOTAK Type C',
         }
         return data

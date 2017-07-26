@@ -5,7 +5,8 @@ from copy import deepcopy
 MIN_COLUMNS = 4
 MAX_COLUMNS = 5
 
-HEADER = set([u'Date', u'Narration', u'Chq/Ref No.', u'Withdrawal (Dr)/Deposit (Cr)', u'Balance'])
+HEADER = set([u'Date', u'Narration', u'Chq/Ref No.',
+              u'Withdrawal (Dr)/Deposit (Cr)', u'Balance'])
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
@@ -26,7 +27,7 @@ class KotakBankStatementsB(object):
 
     def __get_amount(self, input_string):
         raw_amount = input_string
-        for to_be_replaced in ['(Cr)','(Dr)',',']:
+        for to_be_replaced in ['(Cr)', '(Dr)', ',']:
             raw_amount = raw_amount.replace(to_be_replaced, '')
         try:
             return float(raw_amount)
@@ -42,14 +43,14 @@ class KotakBankStatementsB(object):
             statement_dict = {
                 'transaction_date': self.__get_date(data_list[0]),
                 'narration': data_list[1],
-                'transaction_type':'',
+                'transaction_type': '',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             }
             if 'Dr' in data_list[-2]:
-                statement_dict['transaction_type']='withdraw'
+                statement_dict['transaction_type'] = 'withdraw'
             elif 'Cr' in data_list[-2]:
-                statement_dict['transaction_type']='deposit'
+                statement_dict['transaction_type'] = 'deposit'
             else:
                 pass
             if statement_dict:
@@ -74,7 +75,7 @@ class KotakBankStatementsB(object):
         for string_date in from_to_string_date_list:
             pdf_dates += string_date.split(' to ')
         return pdf_dates
-    
+
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
@@ -97,9 +98,11 @@ class KotakBankStatementsB(object):
         opening_balance = None
         if self.statements:
             if self.statements[0]['transaction_type'] == 'withdraw':
-                opening_balance = self.statements[0]['balance'] + self.statements[0]['withdraw_deposit']
+                opening_balance = self.statements[0][
+                    'balance'] + self.statements[0]['withdraw_deposit']
             elif self.statements[0]['transaction_type'] == 'deposit':
-                opening_balance = self.statements[0]['balance'] - self.statements[0]['withdraw_deposit']
+                opening_balance = self.statements[0][
+                    'balance'] - self.statements[0]['withdraw_deposit']
             else:
                 pass
         return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
@@ -220,6 +223,6 @@ class KotakBankStatementsB(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'AXIS',
+            'bank_name': 'KOTAK Type B',
         }
         return data

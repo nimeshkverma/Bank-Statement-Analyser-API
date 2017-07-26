@@ -238,6 +238,6 @@ class AXISBankStatementsA(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'AXIS',
+            'bank_name': 'AXIS Type A',
         }
         return data
