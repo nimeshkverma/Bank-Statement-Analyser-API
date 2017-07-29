@@ -27,21 +27,27 @@ class HDFCBankStatements(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
-    def __is_date(self, input_string):
-        is_date = False
-        try:
-            datetime.datetime.strptime(input_string, '%d/%m/%y')
-            is_date = True
-        except Exception as e:
-            pass
-        return is_date
+    def __get_date(self, date_input):
+        all_date_list = []
+        all_string_date_list = re.findall(r'(\d{2}/\d{2}/\d{2,4})', date_input)
+        for string_date in all_string_date_list:
+            try:
+                all_date_list.append(
+                    datetime.datetime.strptime(string_date, '%d/%m/%y'))
+            except Exception as e:
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                except Exception as e:
+                    pass
+        return all_date_list[0]
 
     def __get_amount(self, input_string):
         comma_remove_input_string = input_string.replace(',', '')
         try:
-            return float(comma_remove_input_string)
+            return int(float(comma_remove_input_string))
         except Exception as e:
-            return 0.0
+            return 0
 
     def __deconcatinate_numbers(self, input_string):
         number_list = input_string.split(' ')
@@ -54,12 +60,12 @@ class HDFCBankStatements(object):
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
-            if len(data_list) in [MIN_COLUMNS, MAX_COLUMNS] and self.__is_date(data_list[0]) and self.__is_date(data_list[3]):
+            if len(data_list) in [MIN_COLUMNS, MAX_COLUMNS]:
                 statement_dict = {
-                    'value_date': datetime.datetime.strptime(data_list[0], '%d/%m/%y'),
+                    'value_date': self.__get_date(data_list[0]),
                     'narration': str(data_list[1]),
                     'reference_no': str(data_list[2]),
-                    'transaction_date': datetime.datetime.strptime(data_list[3], '%d/%m/%y'),
+                    'transaction_date': self.__get_date(data_list[3]),
                 }
                 if len(data_list) == MIN_COLUMNS:
                     statement_dict.update({
@@ -88,18 +94,29 @@ class HDFCBankStatements(object):
                 self.statements.append(
                     statement_dict) if statement_dict else None
 
+    def __get_pdf_dates(self):
+        pdf_dates = []
+        from_to_string_date_list = re.findall(r'Statement From : \d{2}/\d{2}/\d{2}', self.pdf_text) + re.findall(
+            r'From : \d{2}/\d{2}/\d{4}', self.pdf_text) + re.findall(r'TO : \d{2}/\d{2}/\d{2}', self.pdf_text) + re.findall(r'To : \d{2}/\d{2}/\d{4}', self.pdf_text)
+        for from_to_string_date in from_to_string_date_list:
+            pdf_dates.append(from_to_string_date.split(' : ')[-1])
+        return pdf_dates
+
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
-        all_string_date_list = re.findall(
-            r'(\d{2}/\d{2}/\d{2})', self.pdf_text)
+        all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
                     datetime.datetime.strptime(string_date, '%d/%m/%Y'))
             except Exception as e:
-                pass
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, '%d/%m/%y'))
+                except Exception as e:
+                    pass
         self.stats['pdf_text_start_date'] = min(
             all_date_list) if all_date_list else self.stats['start_date']
         self.stats['pdf_text_end_date'] = max(
@@ -114,8 +131,8 @@ class HDFCBankStatements(object):
                 if index + 1 < len(self.raw_table_data['body']) and len(self.raw_table_data['body'][index + 1]):
                     opening_balance = self.raw_table_data['body'][index + 1][0]
                     try:
-                        opening_balance = float(
-                            opening_balance.replace(',', ''))
+                        opening_balance = int(
+                            float(opening_balance.replace(',', '')))
                     except Exception as e:
                         opening_balance = None
         return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
@@ -197,7 +214,7 @@ class HDFCBankStatements(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value

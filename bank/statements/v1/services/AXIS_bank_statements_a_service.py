@@ -2,18 +2,18 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 8
-MAX_COLUMNS = 9
+MIN_COLUMNS = 5
+MAX_COLUMNS = 7
 
-HEADER = set(['S No.', 'Value Date', 'Transaction Date', 'Cheque Number',
-              'Transaction Remarks', 'Withdrawal Amount', 'Deposit Amount', 'Balance (INR )'])
+HEADER = set(['Tran Date', 'Chq No', 'Particulars',
+              'Debit', 'Credit', 'Balance', 'Init.'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class ICICIBankStatements(object):
-    """Class to analyse the data obtained from ICICI Bank"""
+class AXISBankStatementsA(object):
+    """Class to analyse the data obtained from AXIS Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -26,37 +26,60 @@ class ICICIBankStatements(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
+    def __is_date(self, input_string):
+        is_date = False
+        try:
+            datetime.datetime.strptime(input_string, '%d-%m-%Y')
+            is_date = True
+        except Exception as e:
+            pass
+        try:
+            datetime.datetime.strptime(input_string, "%d %b '%y")
+            is_date = True
+        except Exception as e:
+            pass
+        return is_date
+
+    def __get_amount(self, input_string):
+        comma_remove_input_string = input_string.replace(',', '')
+        try:
+            return int(float(comma_remove_input_string))
+        except Exception as e:
+            return 0
+
+    def __get_date(self, date_input):
+        try:
+            return datetime.datetime.strptime(date_input, '%d-%m-%Y')
+        except Exception as e:
+            pass
+        return datetime.datetime.strptime(date_input, "%d %b '%y")
+
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
-        try:
-            if len(data_list) in [8, 9]:
-                statement_dict = {
-                    'sr_no': data_list[0],
-                    'value_date': datetime.datetime.strptime(data_list[1], '%d/%m/%Y'),
-                    'transaction_date': datetime.datetime.strptime(data_list[2], '%d/%m/%Y'),
-                    'cheque_no': data_list[3],
-                }
-                if len(data_list) == 8:
-                    statement_dict.update({
-                        'transaction_remark': str(data_list[4]),
-                        'withdrawal_amount': float(data_list[5]),
-                        'deposit_amount': float(data_list[6]),
-                        'balance': float(data_list[7])
-                    })
-                elif len(data_list) == 9:
-                    statement_dict.update({
-                        'transaction_remark': str(data_list[4]) + str(data_list[5]),
-                        'withdrawal_amount': float(data_list[6]),
-                        'deposit_amount': float(data_list[7]),
-                        'balance': float(data_list[8])
-                    })
-                else:
-                    statement_dict = {}
-                if statement_dict:
-                    self.transactions[statement_dict[
-                        'transaction_date']] = statement_dict['balance']
-        except Exception as e:
-            print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
+        # try:
+        if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
+            statement_dict = {
+                'transaction_date': self.__get_date(data_list[0]),
+                'particulars': data_list[-4],
+                'withdraw_deposit': self.__get_amount(data_list[-3]),
+                'balance': self.__get_amount(data_list[-2]),
+                'init_bank': data_list[-1],
+            }
+        elif len(data_list) > MIN_COLUMNS and len(data_list) <= MAX_COLUMNS and self.__is_date(data_list[0]):
+            statement_dict = {
+                'transaction_date': self.__get_date(data_list[0]),
+                'particulars': data_list[-5],
+                'withdraw': self.__get_amount(data_list[-4]),
+                'deposit': self.__get_amount(data_list[-3]),
+                'balance': self.__get_amount(data_list[-2]),
+                'init_bank': data_list[-1],
+            }
+        if statement_dict:
+            self.transactions[statement_dict[
+                'transaction_date']] = statement_dict['balance']
+        # except Exception as e:
+        # print "Following error occured while processing {data_list} :
+        # {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
     def __set_statements_and_transaction(self):
@@ -67,15 +90,22 @@ class ICICIBankStatements(object):
                 self.statements.append(
                     statement_dict) if statement_dict else None
 
+    def __get_pdf_dates(self):
+        from_string_date_list = re.findall(
+            r'(From\s?: \d{2}-\d{2}-\d{4})', self.pdf_text)
+        to_string_date_list = re.findall(
+            r'(To\s?: \d{2}-\d{2}-\d{4})', self.pdf_text)
+        return [string_date.partition(r'From\s?: ')[2] for string_date in from_string_date_list] + [string_date.partition(r'To :\s?')[2] for string_date in to_string_date_list]
+
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
-        all_string_date_list = re.findall(r'(\d+/\d+/\d+)', self.pdf_text)
+        all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                    datetime.datetime.strptime(string_date, '%d-%m-%Y'))
             except Exception as e:
                 pass
         self.stats['pdf_text_start_date'] = min(
@@ -86,9 +116,11 @@ class ICICIBankStatements(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
-            return self.transactions[self.stats['start_date']]
-        return float(self.statements[0].get('balance', '0.0')) - float(self.statements[0].get('deposit_amount', '0.0')) + float(self.statements[0].get('withdrawal_amount', '0.0'))
+        opening_balance = None
+        for data_list in self.raw_table_data.get('body', []):
+            if len(data_list) == 2 and data_list[0] == 'OPENING BALANCE':
+                opening_balance = self.__get_amount(data_list[1])
+        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
@@ -142,16 +174,18 @@ class ICICIBankStatements(object):
 
     def __set_stats(self):
         self.stats['average_balance'] = round(sum(
-            self.all_day_transactions.values()) / len(self.all_day_transactions.values()), 2)
+            self.all_day_transactions.values()) /
+            len(self.all_day_transactions.values()), 2)
 
     def __json_statements(self):
         statements = []
         for statement in self.statements:
             data = deepcopy(statement)
-            for key in ['value_date', 'transaction_date']:
+            for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdrawal_amount', 'deposit_amount', 'balance']:
-                data[key] = str(data[key])
+            for key in ['withdraw', 'deposit', 'balance', 'withdraw_deposit']:
+                if data.get(key):
+                    data[key] = str(data[key])
             statements.append(data)
         return statements
 
@@ -166,7 +200,7 @@ class ICICIBankStatements(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value
@@ -204,6 +238,6 @@ class ICICIBankStatements(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'ICICI',
+            'bank_name': 'AXIS Type A',
         }
         return data

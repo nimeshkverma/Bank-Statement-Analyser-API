@@ -2,18 +2,18 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 5
-MAX_COLUMNS = 5
+MIN_COLUMNS = 8
+MAX_COLUMNS = 9
 
-HEADER = set(['Tran Date', 'Chq No', 'Particulars',
-              'Debit', 'Credit', 'Balance', 'Init.'])
+HEADER = set(['S No.', 'Value Date', 'Transaction Date', 'Cheque Number',
+              'Transaction Remarks', 'Withdrawal Amount', 'Deposit Amount', 'Balance (INR )'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class AXISBankStatements(object):
-    """Class to analyse the data obtained from AXIS Bank"""
+class ICICIBankStatementsA(object):
+    """Class to analyse the data obtained from ICICI Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -26,44 +26,42 @@ class AXISBankStatements(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
-    def __is_date(self, input_string):
-        is_date = False
-        try:
-            datetime.datetime.strptime(input_string, '%d-%m-%Y')
-            is_date = True
-        except Exception as e:
-            pass
-        return is_date
-
     def __get_amount(self, input_string):
         comma_remove_input_string = input_string.replace(',', '')
         try:
-            return float(comma_remove_input_string)
+            return int(float(comma_remove_input_string))
         except Exception as e:
-            return 0.0
-
-    def __deconcatinate_numbers(self, input_string):
-        number_list = input_string.split(' ')
-        if len(number_list) == 2:
-            for index in xrange(0, len(number_list)):
-                number_list[index] = self.__get_amount(number_list[index])
-            return number_list
-        return [0.0, 0.0]
+            return 0
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
-            if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
+            if len(data_list) in [8, 9]:
                 statement_dict = {
-                    'transaction_date': datetime.datetime.strptime(data_list[0], '%d-%m-%Y'),
-                    'cheque_no': data_list[-4],
-                    'withdraw_deposit': self.__get_amount(data_list[-3]),
-                    'balance': self.__get_amount(data_list[-2]),
-                    'init_bank': data_list[-1],
+                    'sr_no': data_list[0],
+                    'value_date': datetime.datetime.strptime(data_list[1], '%d/%m/%Y'),
+                    'transaction_date': datetime.datetime.strptime(data_list[2], '%d/%m/%Y'),
+                    'cheque_no': data_list[3],
                 }
-            if statement_dict:
-                self.transactions[statement_dict[
-                    'transaction_date']] = statement_dict['balance']
+                if len(data_list) == 8:
+                    statement_dict.update({
+                        'transaction_remark': str(data_list[4]),
+                        'withdrawal_amount': self.__get_amount(data_list[5]),
+                        'deposit_amount': self.__get_amount(data_list[6]),
+                        'balance': self.__get_amount(data_list[7])
+                    })
+                elif len(data_list) == 9:
+                    statement_dict.update({
+                        'transaction_remark': str(data_list[4]) + str(data_list[5]),
+                        'withdrawal_amount': self.__get_amount(data_list[6]),
+                        'deposit_amount': self.__get_amount(data_list[7]),
+                        'balance': self.__get_amount(data_list[8])
+                    })
+                else:
+                    statement_dict = {}
+                if statement_dict:
+                    self.transactions[statement_dict[
+                        'transaction_date']] = statement_dict['balance']
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
@@ -76,22 +74,15 @@ class AXISBankStatements(object):
                 self.statements.append(
                     statement_dict) if statement_dict else None
 
-    def __get_pdf_dates(self):
-        from_string_date_list = re.findall(
-            r'(From : \d{2}-\d{2}-\d{4})', self.pdf_text)
-        to_string_date_list = re.findall(
-            r'(To : \d{2}-\d{2}-\d{4})', self.pdf_text)
-        return [string_date.partition('From : ')[2] for string_date in from_string_date_list] + [string_date.partition('To : ')[2] for string_date in to_string_date_list]
-
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
-        all_string_date_list = self.__get_pdf_dates()
+        all_string_date_list = re.findall(r'(\d+/\d+/\d+)', self.pdf_text)
         all_date_list = []
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d-%m-%Y'))
+                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
             except Exception as e:
                 pass
         self.stats['pdf_text_start_date'] = min(
@@ -102,11 +93,9 @@ class AXISBankStatements(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        opening_balance = None
-        for data_list in self.raw_table_data.get('body', []):
-            if len(data_list) == 2 and data_list[0] == 'OPENING BALANCE':
-                opening_balance = self.__get_amount(data_list[1])
-        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
+        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+            return self.transactions[self.stats['start_date']]
+        return int(self.statements[0].get('balance', '0')) - int(self.statements[0].get('deposit_amount', '0')) + int(self.statements[0].get('withdrawal_amount', '0'))
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
@@ -160,16 +149,15 @@ class AXISBankStatements(object):
 
     def __set_stats(self):
         self.stats['average_balance'] = round(sum(
-            self.all_day_transactions.values()) /
-            len(self.all_day_transactions.values()), 2)
+            self.all_day_transactions.values()) / len(self.all_day_transactions.values()), 2)
 
     def __json_statements(self):
         statements = []
         for statement in self.statements:
             data = deepcopy(statement)
-            for key in ['transaction_date']:
+            for key in ['value_date', 'transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdraw_deposit', 'balance']:
+            for key in ['withdrawal_amount', 'deposit_amount', 'balance']:
                 data[key] = str(data[key])
             statements.append(data)
         return statements
@@ -185,7 +173,7 @@ class AXISBankStatements(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value
@@ -223,6 +211,6 @@ class AXISBankStatements(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'AXIS',
+            'bank_name': 'ICICI Type A',
         }
         return data

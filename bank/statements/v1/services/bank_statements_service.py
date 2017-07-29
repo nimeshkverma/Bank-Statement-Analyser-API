@@ -1,6 +1,5 @@
 import os
 import subprocess
-import re
 import uuid
 import requests
 import json
@@ -17,16 +16,23 @@ from pdfminer.pdfpage import PDFPage
 from tabula import read_pdf
 from django.conf import settings
 
-from ICICI_bank_statements_service import ICICIBankStatements
+import re
+from ICICI_bank_statements_a_service import ICICIBankStatementsA
+from ICICI_bank_statements_b_service import ICICIBankStatementsB
 from HDFC_bank_statements_service import HDFCBankStatements
-from AXIS_bank_statements_service import AXISBankStatements
+from AXIS_bank_statements_a_service import AXISBankStatementsA
+from AXIS_bank_statements_b_service import AXISBankStatementsB
 from SBI_bank_statements_service import SBIBankStatements
+from Kotak_bank_statements_a_service import KotakBankStatementsA
+from Kotak_bank_statements_b_service import KotakBankStatementsB
+from Kotak_bank_statements_c_service import KotakBankStatementsC
+
 from database_service import Database
 from email_service import send_mail
 
 
-class BankStatements(object):
-    """Class for analysis of Bank Statements"""
+class BankStatementsRawData(object):
+    """Class to obtain the Raw data from the Bank Statements"""
 
     def __init__(self, pdf_path, password=''):
         self.pdf_path = pdf_path
@@ -40,33 +46,23 @@ class BankStatements(object):
             'password': self.password,
             'output_format': 'json',
         }
-        self.bank_dict = {
-            'icici': {
-                'unique_header': 'Transaction Remarks',
-                'class': ICICIBankStatements,
-            },
-            'hdfc': {
-                'unique_header': 'Narration',
-                'class': HDFCBankStatements,
-            },
-            'axis': {
-                'unique_header': 'Particulars',
-                'class': AXISBankStatements,
-            },
-            'sbi': {
-                'unique_header': 'Description',
-                'class': SBIBankStatements,
-            }
-        }
-        self.banks = ['icici', 'hdfc', 'axis', 'sbi']
         self.pdf_json = self.__get_pdf_json()
         self.raw_table_data = self.__get_raw_table_data()
         self.pdf_text = self.__get_pdf_text()
-        self.bank_name = None
-        self.specific_bank = self.__get_specific_bank()
+
+    def __get_tabula_params(self, password_on=False):
+        if password_on:
+            return self.tabula_params
+        else:
+            tabula_params = deepcopy(self.tabula_params)
+            tabula_params['password'] = self.password
+            return tabula_params
 
     def __get_pdf_json(self):
-        return read_pdf(self.pdf_path, **self.tabula_params)
+        try:
+            return read_pdf(self.pdf_path, **self.__get_tabula_params(True))
+        except Exception as e:
+            return read_pdf(self.pdf_path, **self.__get_tabula_params(False))
 
     def __get_decrypted_pdf_path(self):
         if '.pdf' in self.pdf_path:
@@ -81,11 +77,16 @@ class BankStatements(object):
     def __get_pdf_text(self):
         pdf_text = ''
         pdf_path_decrypt = self.__get_decrypted_pdf_path()
-        decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
-            password=self.password, pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
         file_clean_command = 'rm {pdf_path_decrypt}'.format(
             pdf_path_decrypt=pdf_path_decrypt)
-        subprocess.call(decrypt_command, shell=True)
+        try:
+            decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
+                password=self.password, pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
+            subprocess.call(decrypt_command, shell=True)
+        except Exception as e:
+            decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
+                password='', pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
+            subprocess.call(decrypt_command, shell=True)
         pdf_text = self.__pdf_to_text(pdf_path_decrypt)
         subprocess.call(file_clean_command, shell=True)
         return pdf_text
@@ -123,6 +124,60 @@ class BankStatements(object):
         text = output.getvalue()
         output.close
         return text
+
+
+class BankStatements(object):
+    """Class for determinsation of Specific Bank from the Bank Statements"""
+
+    def __init__(self, pdf_path, password=''):
+        self.pdf_path = pdf_path
+        self.password = password
+        self.bank_statememt_raw_data = BankStatementsRawData(
+            self.pdf_path, self.password)
+        self.raw_table_data = self.bank_statememt_raw_data.raw_table_data
+        self.pdf_text = self.bank_statememt_raw_data.pdf_text
+        self.bank_dict = {
+            'icici_a': {
+                'unique_header': 'Transaction Remarks',
+                'class': ICICIBankStatementsA,
+            },
+            'icici_b': {
+                'unique_header': 'ACCOUNT TYPE',
+                'class': ICICIBankStatementsB,
+            },
+            'hdfc': {
+                'unique_header': 'Narration',
+                'class': HDFCBankStatements,
+            },
+            'axis_a': {
+                'unique_header': 'Particulars',
+                'class': AXISBankStatementsA,
+            },
+            'axis_b': {
+                'unique_header': 'Bank Account',
+                'class': AXISBankStatementsB,
+            },
+            'sbi': {
+                'unique_header': 'Description',
+                'class': SBIBankStatements,
+            },
+            'kotak_a': {
+                'unique_header': 'Chq/Ref No',
+                'class': KotakBankStatementsA,
+            },
+            'kotak_b': {
+                'unique_header': 'Chq/Ref No.',
+                'class': KotakBankStatementsB,
+            },
+            'kotak_c': {
+                'unique_header': 'Account Statement',
+                'class': KotakBankStatementsC,
+            }
+        }
+        self.banks = ['kotak_c', 'kotak_b', 'kotak_a', 'icici_a', 'hdfc',
+                      'axis_a', 'axis_b', 'sbi', 'icici_b']
+        self.bank_name = None
+        self.specific_bank = self.__get_specific_bank()
 
     def __term_in_header(self, term):
         for header in self.raw_table_data['headers']:
