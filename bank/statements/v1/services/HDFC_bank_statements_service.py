@@ -45,9 +45,9 @@ class HDFCBankStatements(object):
     def __get_amount(self, input_string):
         comma_remove_input_string = input_string.replace(',', '')
         try:
-            return float(comma_remove_input_string)
+            return int(float(comma_remove_input_string))
         except Exception as e:
-            return 0.0
+            return 0
 
     def __deconcatinate_numbers(self, input_string):
         number_list = input_string.split(' ')
@@ -131,8 +131,8 @@ class HDFCBankStatements(object):
                 if index + 1 < len(self.raw_table_data['body']) and len(self.raw_table_data['body'][index + 1]):
                     opening_balance = self.raw_table_data['body'][index + 1][0]
                     try:
-                        opening_balance = float(
-                            opening_balance.replace(',', ''))
+                        opening_balance = int(
+                            float(opening_balance.replace(',', '')))
                     except Exception as e:
                         opening_balance = None
         return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
@@ -214,7 +214,7 @@ class HDFCBankStatements(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value

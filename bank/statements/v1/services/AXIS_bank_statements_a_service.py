@@ -43,9 +43,9 @@ class AXISBankStatementsA(object):
     def __get_amount(self, input_string):
         comma_remove_input_string = input_string.replace(',', '')
         try:
-            return float(comma_remove_input_string)
+            return int(float(comma_remove_input_string))
         except Exception as e:
-            return 0.0
+            return 0
 
     def __get_date(self, date_input):
         try:
@@ -200,7 +200,7 @@ class AXISBankStatementsA(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value

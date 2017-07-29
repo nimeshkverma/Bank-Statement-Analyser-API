@@ -5,7 +5,8 @@ from copy import deepcopy
 MIN_COLUMNS = 8
 MAX_COLUMNS = 8
 
-HEADER = set(['Sl. No.', 'Date', 'Description', 'Chq / Ref number', 'Amount', 'Dr / Cr', 'Balance', 'Dr / Cr'])
+HEADER = set(['Sl. No.', 'Date', 'Description', 'Chq / Ref number',
+              'Amount', 'Dr / Cr', 'Balance', 'Dr / Cr'])
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
@@ -26,12 +27,12 @@ class KotakBankStatementsC(object):
 
     def __get_amount(self, input_string):
         raw_amount = input_string
-        for to_be_replaced in [',']:
+        for to_be_replaced in ['(Cr)', '(Dr)', ',']:
             raw_amount = raw_amount.replace(to_be_replaced, '')
         try:
-            return float(raw_amount)
+            return int(float(raw_amount))
         except Exception as e:
-            return 0.0
+            return 0
 
     def __get_date(self, date_input):
         return datetime.datetime.strptime(date_input, '%d/%m/%Y')
@@ -186,7 +187,7 @@ class KotakBankStatementsC(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value

@@ -32,9 +32,9 @@ class ICICIBankStatementsB(object):
     def __get_amount(self, input_string):
         comma_remove_input_string = input_string.replace(',', '')
         try:
-            return float(comma_remove_input_string)
+            return int(float(comma_remove_input_string))
         except Exception as e:
-            return 0.0
+            return 0
 
     def __get_date(self, date_input):
         all_string_date_list = re.findall(
@@ -106,7 +106,7 @@ class ICICIBankStatementsB(object):
     def __get_first_day_balance(self):
         if self.stats['start_date'] == self.stats['pdf_text_start_date']:
             return self.transactions[self.stats['start_date']]
-        return float(self.statements[0].get('balance', '0.0')) - float(self.statements[0].get('deposit_amount', '0.0')) + float(self.statements[0].get('withdrawal_amount', '0.0'))
+        return int(self.statements[0].get('balance', '0')) - int(self.statements[0].get('deposit_amount', '0')) + int(self.statements[0].get('withdrawal_amount', '0'))
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
@@ -184,7 +184,7 @@ class ICICIBankStatementsB(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value

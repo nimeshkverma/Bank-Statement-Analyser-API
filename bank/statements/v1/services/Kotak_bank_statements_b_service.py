@@ -30,9 +30,9 @@ class KotakBankStatementsB(object):
         for to_be_replaced in ['(Cr)', '(Dr)', ',']:
             raw_amount = raw_amount.replace(to_be_replaced, '')
         try:
-            return float(raw_amount)
+            return int(float(raw_amount))
         except Exception as e:
-            return 0.0
+            return 0
 
     def __get_date(self, date_input):
         return datetime.datetime.strptime(date_input, '%d-%b-%y')
@@ -185,7 +185,7 @@ class KotakBankStatementsB(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value

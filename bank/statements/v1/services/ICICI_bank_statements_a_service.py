@@ -26,6 +26,13 @@ class ICICIBankStatementsA(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
+    def __get_amount(self, input_string):
+        comma_remove_input_string = input_string.replace(',', '')
+        try:
+            return int(float(comma_remove_input_string))
+        except Exception as e:
+            return 0
+
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
@@ -39,16 +46,16 @@ class ICICIBankStatementsA(object):
                 if len(data_list) == 8:
                     statement_dict.update({
                         'transaction_remark': str(data_list[4]),
-                        'withdrawal_amount': float(data_list[5]),
-                        'deposit_amount': float(data_list[6]),
-                        'balance': float(data_list[7])
+                        'withdrawal_amount': self.__get_amount(data_list[5]),
+                        'deposit_amount': self.__get_amount(data_list[6]),
+                        'balance': self.__get_amount(data_list[7])
                     })
                 elif len(data_list) == 9:
                     statement_dict.update({
                         'transaction_remark': str(data_list[4]) + str(data_list[5]),
-                        'withdrawal_amount': float(data_list[6]),
-                        'deposit_amount': float(data_list[7]),
-                        'balance': float(data_list[8])
+                        'withdrawal_amount': self.__get_amount(data_list[6]),
+                        'deposit_amount': self.__get_amount(data_list[7]),
+                        'balance': self.__get_amount(data_list[8])
                     })
                 else:
                     statement_dict = {}
@@ -88,7 +95,7 @@ class ICICIBankStatementsA(object):
     def __get_first_day_balance(self):
         if self.stats['start_date'] == self.stats['pdf_text_start_date']:
             return self.transactions[self.stats['start_date']]
-        return float(self.statements[0].get('balance', '0.0')) - float(self.statements[0].get('deposit_amount', '0.0')) + float(self.statements[0].get('withdrawal_amount', '0.0'))
+        return int(self.statements[0].get('balance', '0')) - int(self.statements[0].get('deposit_amount', '0')) + int(self.statements[0].get('withdrawal_amount', '0'))
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
@@ -166,7 +173,7 @@ class ICICIBankStatementsA(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == float:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value
