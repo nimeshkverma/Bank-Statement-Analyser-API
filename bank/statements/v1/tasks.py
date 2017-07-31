@@ -35,3 +35,9 @@ def dump_bank_data_to_dynamo(customer_data):
     except Exception as e:
         print e
     return data
+
+
+@shared_task(name="send_bank_statement_analysis_tool_mail")
+def send_bank_statement_analysis_tool_mail(threshold, bank_statements_pdf, bank_statements_pdf_password):
+    bank_statements_service.BankStatementsAnalyserTool(
+        bank_statements_pdf, bank_statements_pdf_password, threshold).send_bank_analysis_email()

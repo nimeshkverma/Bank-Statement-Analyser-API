@@ -338,3 +338,99 @@ class BankStatementsAnalyser(object):
         }
         send_mail(email_details, self.template, [csvfile])
         self.__remove_file(csvfile)
+
+
+class BankStatementsAnalyserTool(object):
+
+    def __init__(self, bank_pdf_path, bank_pdf_password, threshold):
+        self.bank_pdf_path = bank_pdf_path
+        self.bank_pdf_password = bank_pdf_password
+        self.threshold = threshold
+        self.template = 'statements/v1/bank_statement_analysis_email.html'
+        self.pwd = self.__pwd()
+        self.bank_statements = self.__get_bank_statements()
+        self.bank_data = self.__get_bank_data()
+        self.__clean_up()
+
+    def __clean_up(self):
+        subprocess.call('rm {bank_pdf_path}'.format(
+            bank_pdf_path=self.bank_pdf_path), shell=True)
+
+    def __get_bank_statements(self):
+        bank_statements = None
+        try:
+            bank_statements = BankStatements(
+                self.bank_pdf_path, self.bank_pdf_password)
+        except Exception as e:
+            pass
+        return bank_statements
+
+    def __pwd(self):
+        pwd = ''
+        try:
+            subprocess_pwd = subprocess.check_output('pwd')
+            pwd = subprocess_pwd.split('\n')[0] + '/statements/v1/services'
+        except Exception as e:
+            pass
+        return pwd
+
+    def __get_bank_data(self):
+        data = {
+            'emi_details': {
+                'Threshold': self.threshold,
+            }
+        }
+        if self.bank_statements and self.bank_statements.specific_bank:
+            data['bank_name'] = self.bank_statements.bank_name
+            data.update(
+                self.bank_statements.specific_bank.data_json(self.threshold))
+        return data
+
+    def __create_bank_statement_csv(self):
+        csv_name = "{pwd}/{uuid}.csv".format(pwd=self.pwd,
+                                             uuid=uuid.uuid4().hex)
+        with open(csv_name, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(['Attribute Name', 'Value'])
+            for emi_detail_key, emi_detail_value in self.bank_data['emi_details'].iteritems():
+                writer.writerow([emi_detail_key, emi_detail_value])
+            for stats_key, stats_value in self.bank_data['stats'].iteritems():
+                writer.writerow([stats_key, stats_value])
+
+            writer.writerow(['', ''])
+            writer.writerow(
+                ['Month-Year', 'No of day Balance is above EMI', 'No of days Analysed'])
+            for monthly_stats_key, monthly_stats_value in self.bank_data['monthly_stats'].iteritems():
+                writer.writerow([monthly_stats_key, monthly_stats_value[
+                                'balance_above_day_count'], monthly_stats_value['all_day_count']])
+
+            for i in xrange(0, 25 - len(self.bank_data['monthly_stats'])):
+                writer.writerow([''])
+
+            writer.writerow(['', ''])
+            writer.writerow(['Date', 'Balance'])
+            for transaction_key, transaction_value in self.bank_data['all_transactions'].iteritems():
+                writer.writerow([transaction_key, transaction_value])
+        return csv_name
+
+    def __remove_file(self, file_path):
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    def send_bank_analysis_email(self):
+        csvfile = self.__create_bank_statement_csv()
+        email_data = {
+            'data': {
+                'threshold': self.threshold,
+                'bank': self.bank_data['bank_name'],
+            }
+        }
+        email_details = {
+            'data': email_data,
+            'subject': "Bank:{bank} Statements Analysis, Threshold:{threshold} ".format(threshold=self.threshold, bank=self.bank_data['bank_name']),
+            'body': "Empty",
+            'sender_email_id': settings.SERVER_EMAIL,
+            'reciever_email_ids': settings.RECIEVER_EMAILS,
+        }
+        send_mail(email_details, self.template, [csvfile])
+        self.__remove_file(csvfile)
