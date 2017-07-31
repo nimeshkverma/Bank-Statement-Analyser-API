@@ -61,9 +61,8 @@ class StatementAnalyserToolDetails(View):
         if form.is_valid():
             pdf_path = document_service.Document(
                 request.FILES['bank_statements_pdf'].name, request.FILES['bank_statements_pdf']).file_path
-            print pdf_path
-            tasks.send_bank_statement_analysis_tool_mail(form.cleaned_data[
-                                                         'threshold'], pdf_path, form.cleaned_data['bank_statements_pdf_password'])
+            tasks.send_bank_statement_analysis_tool_mail.delay(form.cleaned_data[
+                'threshold'], pdf_path, form.cleaned_data['bank_statements_pdf_password'])
             return render_to_response(
                 self.form_template,
                 {
