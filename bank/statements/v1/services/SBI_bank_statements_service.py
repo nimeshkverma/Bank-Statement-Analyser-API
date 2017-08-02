@@ -236,7 +236,7 @@ class SBIBankStatements(object):
         for key, value in self.stats.iteritems():
             if type(value) == datetime.datetime:
                 stats[key] = value.strftime("%d/%m/%y")
-            elif type(value) == [float, int]:
+            elif type(value) in [float, int]:
                 stats[key] = str(value)
             else:
                 stats[key] = value
