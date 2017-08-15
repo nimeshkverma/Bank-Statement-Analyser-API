@@ -108,8 +108,11 @@ class AXISBankStatementsB(object):
         for day_no in xrange(1, self.stats['days']):
             day_date = self.stats['pdf_text_start_date'] + \
                 datetime.timedelta(days=day_no)
-            all_day_transactions[day_date] = self.transactions[day_date] if self.transactions.get(
-                day_date) else all_day_transactions[day_date - datetime.timedelta(days=1)]
+            if day_date in self.transactions.keys():
+                all_day_transactions[day_date] = self.transactions[day_date]
+            else:
+                all_day_transactions[day_date] = all_day_transactions[
+                    day_date - datetime.timedelta(days=1)]
         return all_day_transactions
 
     def __min_date(self):
