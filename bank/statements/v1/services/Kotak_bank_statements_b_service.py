@@ -12,7 +12,7 @@ MIN_END_DAY_OF_MONTH = 25
 
 
 class KotakBankStatementsB(object):
-    """Class to analyse the data obtained from AXIS Bank"""
+    """Class to analyse the data obtained from KOTAK Type B Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
