@@ -12,7 +12,7 @@ MIN_END_DAY_OF_MONTH = 25
 
 
 class KotakBankStatementsC(object):
-    """Class to analyse the data obtained from AXIS Bank"""
+    """Class to analyse the data obtained from KOTAK Type C Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -62,6 +62,8 @@ class KotakBankStatementsC(object):
         return statement_dict
 
     def __set_statements_and_transaction(self):
+        if self.raw_table_data.get('body'):
+            self.raw_table_data['body'].reverse()
         for data_list in self.raw_table_data.get('body', []):
             if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
                 statement_dict = self.__get_statement_set_transaction(
