@@ -121,7 +121,7 @@ class SBIBankStatements(object):
     def __get_pdf_dates(self):
         pdf_dates = []
         from_to_string_date_list = re.findall(
-            r'Account Statement from \d{2} [a-zA-Z]{3} \d{4} to \d{2} [a-zA-Z]{3} \d{4}', self.pdf_text)
+            r'Account Statement from \d{1,2} [a-zA-Z]{3} \d{4} to \d{1,2} [a-zA-Z]{3} \d{4}', self.pdf_text)
         for from_to_string_date in from_to_string_date_list:
             pdf_dates.append(from_to_string_date.split(' to ')[-1])
             pdf_dates.append(from_to_string_date.split(' to ')[
