@@ -107,22 +107,12 @@ class KotakBankStatementsA(object):
     def __get_first_day_balance(self):
         opening_balance = None
         opening_balance_statement = {}
-        opening_balance_records = 0
         for statement in self.statements:
             if statement['transaction_date'] != self.stats['start_date']:
                 break
-            opening_balance_records += 1
             opening_balance_statement = statement
         if opening_balance_statement:
-            if opening_balance_records <= 1:
-                if opening_balance_statement['transaction_type'] == 'withdraw':
-                    opening_balance = opening_balance_statement[
-                        'balance'] + opening_balance_statement['withdraw_deposit']
-                elif opening_balance_statement['transaction_type'] == 'deposit':
-                    opening_balance = opening_balance_statement[
-                        'balance'] - opening_balance_statement['withdraw_deposit']
-            else:
-                opening_balance = opening_balance_statement['balance']
+            opening_balance = opening_balance_statement['balance']
         return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
 
     def __get_all_day_transactions(self):

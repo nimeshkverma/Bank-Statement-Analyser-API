@@ -187,22 +187,12 @@ class SBIBankStatements(object):
         if self.stats['start_date'] == self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}
-            opening_balance_records = 0
             for statement in self.statements:
                 if statement['transaction_date'] != self.stats['start_date']:
                     break
-                opening_balance_records += 1
                 opening_balance_statement = statement
             if opening_balance_statement:
-                if opening_balance_records <= 1:
-                    if opening_balance_statement['transaction_type'] == 'withdraw':
-                        opening_balance = opening_balance_statement[
-                            'balance'] + opening_balance_statement['withdraw_deposit']
-                    elif opening_balance_statement['transaction_type'] == 'deposit':
-                        opening_balance = opening_balance_statement[
-                            'balance'] - opening_balance_statement['withdraw_deposit']
-                else:
-                    opening_balance = opening_balance_statement['balance']
+                opening_balance = opening_balance_statement['balance']
             if opening_balance != None:
                 balance = opening_balance
         return balance

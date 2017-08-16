@@ -95,11 +95,22 @@ class AXISBankStatementsB(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        opening_balance = None
+        balance = 0.0
         for data_list in self.raw_table_data.get('body', []):
             if len(data_list) == 2 and data_list[0] == 'OPENING BALANCE':
-                opening_balance = self.__get_amount(data_list[1])
-        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
+                balance = self.__get_amount(data_list[1])
+        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+            opening_balance = None
+            opening_balance_statement = {}
+            for statement in self.statements:
+                if statement['transaction_date'] != self.stats['start_date']:
+                    break
+                opening_balance_statement = statement
+            if opening_balance_statement:
+                opening_balance = opening_balance_statement['balance']
+            if opening_balance != None:
+                balance = opening_balance
+        return balance
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}

@@ -56,30 +56,29 @@ class AXISBankStatementsA(object):
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
-        # try:
-        if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
-            statement_dict = {
-                'transaction_date': self.__get_date(data_list[0]),
-                'particulars': data_list[-4],
-                'withdraw_deposit': self.__get_amount(data_list[-3]),
-                'balance': self.__get_amount(data_list[-2]),
-                'init_bank': data_list[-1],
-            }
-        elif len(data_list) > MIN_COLUMNS and len(data_list) <= MAX_COLUMNS and self.__is_date(data_list[0]):
-            statement_dict = {
-                'transaction_date': self.__get_date(data_list[0]),
-                'particulars': data_list[-5],
-                'withdraw': self.__get_amount(data_list[-4]),
-                'deposit': self.__get_amount(data_list[-3]),
-                'balance': self.__get_amount(data_list[-2]),
-                'init_bank': data_list[-1],
-            }
-        if statement_dict:
-            self.transactions[statement_dict[
-                'transaction_date']] = statement_dict['balance']
-        # except Exception as e:
-        # print "Following error occured while processing {data_list} :
-        # {error}".format(data_list=str(data_list), error=str(e))
+        try:
+            if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
+                statement_dict = {
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'particulars': data_list[-4],
+                    'withdraw_deposit': self.__get_amount(data_list[-3]),
+                    'balance': self.__get_amount(data_list[-2]),
+                    'init_bank': data_list[-1],
+                }
+            elif len(data_list) > MIN_COLUMNS and len(data_list) <= MAX_COLUMNS and self.__is_date(data_list[0]):
+                statement_dict = {
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'particulars': data_list[-5],
+                    'withdraw': self.__get_amount(data_list[-4]),
+                    'deposit': self.__get_amount(data_list[-3]),
+                    'balance': self.__get_amount(data_list[-2]),
+                    'init_bank': data_list[-1],
+                }
+            if statement_dict:
+                self.transactions[statement_dict[
+                    'transaction_date']] = statement_dict['balance']
+        except Exception as e:
+            print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
     def __set_statements_and_transaction(self):
@@ -116,11 +115,22 @@ class AXISBankStatementsA(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        opening_balance = None
+        balance = 0.0
         for data_list in self.raw_table_data.get('body', []):
             if len(data_list) == 2 and data_list[0] == 'OPENING BALANCE':
-                opening_balance = self.__get_amount(data_list[1])
-        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
+                balance = self.__get_amount(data_list[1])
+        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+            opening_balance = None
+            opening_balance_statement = {}
+            for statement in self.statements:
+                if statement['transaction_date'] != self.stats['start_date']:
+                    break
+                opening_balance_statement = statement
+            if opening_balance_statement:
+                opening_balance = opening_balance_statement['balance']
+            if opening_balance != None:
+                balance = opening_balance
+        return balance
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
