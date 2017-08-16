@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 5
+MIN_COLUMNS = 4
 MAX_COLUMNS = 7
 
 HEADER = set(['Tran Date', 'Chq No', 'Particulars',
@@ -58,6 +58,15 @@ class AXISBankStatementsA(object):
         statement_dict = {}
         try:
             if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
+                balance = data_list[-1].split(' ')[0]
+                statement_dict = {
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'particulars': data_list[-3],
+                    'withdraw_deposit': self.__get_amount(data_list[-2]),
+                    'balance': self.__get_amount(balance),
+                    'init_bank': data_list[-1],
+                }
+            elif len(data_list) == MIN_COLUMNS + 1 and self.__is_date(data_list[0]):
                 statement_dict = {
                     'transaction_date': self.__get_date(data_list[0]),
                     'particulars': data_list[-4],
@@ -65,7 +74,7 @@ class AXISBankStatementsA(object):
                     'balance': self.__get_amount(data_list[-2]),
                     'init_bank': data_list[-1],
                 }
-            elif len(data_list) > MIN_COLUMNS and len(data_list) <= MAX_COLUMNS and self.__is_date(data_list[0]):
+            elif len(data_list) > MIN_COLUMNS + 1 and len(data_list) <= MAX_COLUMNS and self.__is_date(data_list[0]):
                 statement_dict = {
                     'transaction_date': self.__get_date(data_list[0]),
                     'particulars': data_list[-5],
@@ -74,6 +83,8 @@ class AXISBankStatementsA(object):
                     'balance': self.__get_amount(data_list[-2]),
                     'init_bank': data_list[-1],
                 }
+            else:
+                pass
             if statement_dict:
                 self.transactions[statement_dict[
                     'transaction_date']] = statement_dict['balance']
@@ -94,7 +105,7 @@ class AXISBankStatementsA(object):
             r'(From\s?: \d{2}-\d{2}-\d{4})', self.pdf_text)
         to_string_date_list = re.findall(
             r'(To\s?: \d{2}-\d{2}-\d{4})', self.pdf_text)
-        return [string_date.partition(r'From\s?: ')[2] for string_date in from_string_date_list] + [string_date.partition(r'To :\s?')[2] for string_date in to_string_date_list]
+        return [string_date.partition(': ')[2] for string_date in from_string_date_list] + [string_date.partition(': ')[2] for string_date in to_string_date_list]
 
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
