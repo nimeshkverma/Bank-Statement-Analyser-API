@@ -67,9 +67,9 @@ class SBIBankStatements(object):
             return number_list
         return [0.0, 0.0]
 
-    def __get_statement_set_transaction(self, index, partition_data=False):
+    def __get_statement_set_transaction(self, index, partition_data='simple'):
         statement_dict = {}
-        if not partition_data and len(self.raw_table_data['body'][index]) in [5, 6]:
+        if partition_data == 'simple' and len(self.raw_table_data['body'][index]) in [4, 5, 6]:
             try:
                 statement_dict = {
                     'transaction_date': datetime.datetime.strptime(self.raw_table_data['body'][index][0], '%d %b %Y'),
@@ -80,7 +80,7 @@ class SBIBankStatements(object):
                 }
             except Exception as e:
                 print "Following error occured while processing {data_list} : {error}".format(data_list=str(self.raw_table_data['body'][index]), error=str(e))
-        elif partition_data and len(self.raw_table_data['body'][index]) in [5, 6] and index + 1 < len(self.raw_table_data['body']) and self.raw_table_data['body'][index + 1][0] in YEAR_LIST:
+        elif partition_data == 'splitted' and len(self.raw_table_data['body'][index]) in [4, 5, 6] and index + 1 < len(self.raw_table_data['body']) and self.raw_table_data['body'][index + 1][0] in YEAR_LIST:
             try:
                 statement_dict = {
                     'transaction_date': datetime.datetime.strptime(self.raw_table_data['body'][index][0] + ' ' + self.raw_table_data['body'][index + 1][0], '%d %b %Y'),
@@ -89,6 +89,31 @@ class SBIBankStatements(object):
                     'withdraw_deposit': self.__get_amount(self.raw_table_data['body'][index][-2]),
                     'balance': self.__get_amount(self.raw_table_data['body'][index][-1]),
                 }
+            except Exception as e:
+                print "Following error occured while processing {data_list} : {error}".format(data_list=str(self.raw_table_data['body'][index]), error=str(e))
+        elif partition_data == 'complex' and len(self.raw_table_data['body'][index]) >= 2 and re.findall(r'\d{1,2} [a-zA-Z]{3} \d{4}', self.raw_table_data['body'][index][0]):
+            try:
+                date_list = re.findall(
+                    r'\d{1,2} [a-zA-Z]{3} \d{4}', self.raw_table_data['body'][index][0])
+                statement_dict = {
+                    'transaction_date': datetime.datetime.strptime(date_list[0], '%d %b %Y'),
+                    'balance': self.__get_amount(self.raw_table_data['body'][index][-1]),
+                }
+            except Exception as e:
+                print "Following error occured while processing {data_list} : {error}".format(data_list=str(self.raw_table_data['body'][index]), error=str(e))
+        elif partition_data == 'complex' and len(self.raw_table_data['body'][index]) >= 2 and re.findall(r'\d{1,2} [a-zA-Z]{3}', self.raw_table_data['body'][index][0]) and index + 1 < len(self.raw_table_data['body']):
+            try:
+                date_part1_list = re.findall(
+                    r'\d{1,2} [a-zA-Z]{3}', self.raw_table_data['body'][index][0])
+                date_part2_list = re.findall(
+                    r'\d{4}', self.raw_table_data['body'][index + 1][0])
+                date_string = date_part1_list[
+                    0] + ' ' + date_part2_list[0] if date_part2_list else None
+                if date_string:
+                    statement_dict = {
+                        'transaction_date': datetime.datetime.strptime(date_string, '%d %b %Y'),
+                        'balance': self.__get_amount(self.raw_table_data['body'][index][-1]),
+                    }
             except Exception as e:
                 print "Following error occured while processing {data_list} : {error}".format(data_list=str(self.raw_table_data['body'][index]), error=str(e))
         else:
@@ -108,11 +133,14 @@ class SBIBankStatements(object):
                     'body'][index][0].split(' ')
                 if len(first_column_parts) == 3 and first_column_parts[0] in DAY_LIST and first_column_parts[1] in MONTH_LIST and first_column_parts[2] in YEAR_LIST:
                     statement_dict = self.__get_statement_set_transaction(
-                        index)
+                        index, 'simple')
                 elif len(first_column_parts) == 2 and first_column_parts[0] in DAY_LIST and first_column_parts[1] in MONTH_LIST:
                     statement_dict = self.__get_statement_set_transaction(
-                        index, True)
+                        index, 'splitted')
                     index += 1
+                elif len(first_column_parts) > 3:
+                    statement_dict = self.__get_statement_set_transaction(
+                        index, 'complex')
                 else:
                     pass
             index += 1
@@ -121,7 +149,7 @@ class SBIBankStatements(object):
     def __get_pdf_dates(self):
         pdf_dates = []
         from_to_string_date_list = re.findall(
-            r'Account Statement from \d{2} [a-zA-Z]{3} \d{4} to \d{2} [a-zA-Z]{3} \d{4}', self.pdf_text)
+            r'Account Statement from \d{1,2} [a-zA-Z]{3} \d{4} to \d{1,2} [a-zA-Z]{3} \d{4}', self.pdf_text)
         for from_to_string_date in from_to_string_date_list:
             pdf_dates.append(from_to_string_date.split(' to ')[-1])
             pdf_dates.append(from_to_string_date.split(' to ')[
@@ -149,13 +177,24 @@ class SBIBankStatements(object):
     def __get_first_day_balance(self):
         balance = 0.0
         balance_string = re.findall(
-            r'Balance as on \d{2} [a-zA-Z]{3} \d{4}[^\n]+', self.pdf_text)
+            r'Balance as on \d{1,2} [a-zA-Z]{3} \d{4}[^\n]+', self.pdf_text)
         if balance_string and '(cid:9)' in balance_string[0]:
             balance = self.__get_amount(balance_string[0].split('(cid:9)')[-1])
         elif balance_string:
             balance = self.__get_amount(balance_string[0].split(':')[-1])
         else:
             pass
+        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+            opening_balance = None
+            opening_balance_statement = {}
+            for statement in self.statements:
+                if statement['transaction_date'] != self.stats['start_date']:
+                    break
+                opening_balance_statement = statement
+            if opening_balance_statement:
+                opening_balance = opening_balance_statement['balance']
+            if opening_balance != None:
+                balance = opening_balance
         return balance
 
     def __get_all_day_transactions(self):
@@ -165,8 +204,11 @@ class SBIBankStatements(object):
         for day_no in xrange(1, self.stats['days']):
             day_date = self.stats['pdf_text_start_date'] + \
                 datetime.timedelta(days=day_no)
-            all_day_transactions[day_date] = self.transactions[day_date] if self.transactions.get(
-                day_date) else all_day_transactions[day_date - datetime.timedelta(days=1)]
+            if day_date in self.transactions.keys():
+                all_day_transactions[day_date] = self.transactions[day_date]
+            else:
+                all_day_transactions[day_date] = all_day_transactions[
+                    day_date - datetime.timedelta(days=1)]
         return all_day_transactions
 
     def __min_date(self):
@@ -221,7 +263,8 @@ class SBIBankStatements(object):
             for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
             for key in ['withdraw_deposit',  'balance']:
-                data[key] = str(data[key])
+                if data.get(key):
+                    data[key] = str(data[key])
             statements.append(data)
         return statements
 

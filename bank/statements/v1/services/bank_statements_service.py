@@ -55,7 +55,7 @@ class BankStatementsRawData(object):
             return self.tabula_params
         else:
             tabula_params = deepcopy(self.tabula_params)
-            tabula_params['password'] = self.password
+            tabula_params['password'] = ""
             return tabula_params
 
     def __get_pdf_json(self):
@@ -68,11 +68,8 @@ class BankStatementsRawData(object):
         if '.pdf' in self.pdf_path:
             path_list = self.pdf_path.split('.pdf')
             return path_list[0] + '_decrypted.pdf'
-        elif '.pdf' in self.pdf_path:
-            path_list = self.pdf_path.split('.PDF')
-            return path_list[0] + '_decrypted.pdf'
         else:
-            self.pdf_path + +'_decrypted.pdf'
+            self.pdf_path + '_decrypted.pdf'
 
     def __get_pdf_text(self):
         pdf_text = ''
@@ -82,7 +79,12 @@ class BankStatementsRawData(object):
         try:
             decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
                 password=self.password, pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
-            subprocess.call(decrypt_command, shell=True)
+            decrypt_command_output = subprocess.call(
+                decrypt_command, shell=True)
+            if decrypt_command_output != 0:
+                decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
+                    password='', pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
+                subprocess.call(decrypt_command, shell=True)
         except Exception as e:
             decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
                 password='', pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)

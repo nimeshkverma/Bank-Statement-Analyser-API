@@ -12,7 +12,7 @@ MIN_END_DAY_OF_MONTH = 25
 
 
 class KotakBankStatementsC(object):
-    """Class to analyse the data obtained from AXIS Bank"""
+    """Class to analyse the data obtained from KOTAK Type C Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -62,6 +62,8 @@ class KotakBankStatementsC(object):
         return statement_dict
 
     def __set_statements_and_transaction(self):
+        if self.raw_table_data.get('body'):
+            self.raw_table_data['body'].reverse()
         for data_list in self.raw_table_data.get('body', []):
             if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
                 statement_dict = self.__get_statement_set_transaction(
@@ -98,15 +100,13 @@ class KotakBankStatementsC(object):
 
     def __get_first_day_balance(self):
         opening_balance = None
-        if self.statements:
-            if self.statements[-1]['transaction_type'] == 'withdraw':
-                opening_balance = self.statements[0][
-                    'balance'] + self.statements[0]['withdraw_deposit']
-            elif self.statements[-1]['transaction_type'] == 'deposit':
-                opening_balance = self.statements[0][
-                    'balance'] - self.statements[0]['withdraw_deposit']
-            else:
-                pass
+        opening_balance_statement = {}
+        for statement in self.statements:
+            if statement['transaction_date'] != self.stats['start_date']:
+                break
+            opening_balance_statement = statement
+        if opening_balance_statement:
+            opening_balance = opening_balance_statement['balance']
         return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
 
     def __get_all_day_transactions(self):
@@ -116,8 +116,11 @@ class KotakBankStatementsC(object):
         for day_no in xrange(1, self.stats['days']):
             day_date = self.stats['pdf_text_start_date'] + \
                 datetime.timedelta(days=day_no)
-            all_day_transactions[day_date] = self.transactions[day_date] if self.transactions.get(
-                day_date) else all_day_transactions[day_date - datetime.timedelta(days=1)]
+            if day_date in self.transactions.keys():
+                all_day_transactions[day_date] = self.transactions[day_date]
+            else:
+                all_day_transactions[day_date] = all_day_transactions[
+                    day_date - datetime.timedelta(days=1)]
         return all_day_transactions
 
     def __min_date(self):
