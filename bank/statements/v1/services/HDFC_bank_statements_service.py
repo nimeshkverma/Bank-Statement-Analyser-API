@@ -125,17 +125,28 @@ class HDFCBankStatements(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        opening_balance = None
+        balance = None
         for index in xrange(0, len(self.raw_table_data.get('body', []))):
             if len(self.raw_table_data['body'][index]) == 5 and self.raw_table_data['body'][index][0] == 'Opening Balance':
                 if index + 1 < len(self.raw_table_data['body']) and len(self.raw_table_data['body'][index + 1]):
-                    opening_balance = self.raw_table_data['body'][index + 1][0]
+                    balance = self.raw_table_data['body'][index + 1][0]
                     try:
-                        opening_balance = int(
-                            float(opening_balance.replace(',', '')))
+                        balance = int(
+                            float(balance.replace(',', '')))
                     except Exception as e:
-                        opening_balance = None
-        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
+                        balance = None
+        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+            opening_balance = None
+            opening_balance_statement = {}
+            for statement in self.statements:
+                if statement['transaction_date'] != self.stats['start_date']:
+                    break
+                opening_balance_statement = statement
+            if opening_balance_statement:
+                opening_balance = opening_balance_statement['balance']
+            if opening_balance != None:
+                balance = opening_balance
+        return balance if balance else self.transactions[self.stats['start_date']]
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
