@@ -166,7 +166,7 @@ class HDFCBankStatements(object):
     def __get_first_day_balance(self):
         balance = None
         for index in xrange(0, len(self.raw_table_data.get('body', []))):
-            if len(self.raw_table_data['body'][index]) == 5 and self.raw_table_data['body'][index][0] == 'Opening Balance':
+            if len(self.raw_table_data['body'][index]) >= 5 and self.raw_table_data['body'][index][0] == 'Opening Balance':
                 if index + 1 < len(self.raw_table_data['body']) and len(self.raw_table_data['body'][index + 1]):
                     balance = self.raw_table_data['body'][index + 1][0]
                     try:
@@ -185,7 +185,7 @@ class HDFCBankStatements(object):
                 opening_balance = opening_balance_statement['closing_balance']
             if opening_balance != None:
                 balance = opening_balance
-        return balance if balance else self.transactions[self.stats['start_date']]
+        return balance if balance != None else self.transactions[self.stats['start_date']]
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
