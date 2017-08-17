@@ -3,7 +3,7 @@ import datetime
 from copy import deepcopy
 
 MIN_COLUMNS = 4
-MAX_COLUMNS = 5
+MAX_COLUMNS = 10
 
 HEADER = set(['Date', 'Narration Chq/Ref No', 'Withdrawal (Dr)/Deposit (Cr)',
               'Withdrawal (Dr)/', 'Balance', 'Narration', 'Chq/Ref No'])
