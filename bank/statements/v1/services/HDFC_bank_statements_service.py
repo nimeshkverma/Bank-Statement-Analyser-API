@@ -3,7 +3,7 @@ import datetime
 from copy import deepcopy
 
 MIN_COLUMNS = 5
-MAX_COLUMNS = 6
+MAX_COLUMNS = 7
 
 
 HEADER = set(['Date', 'Narration', 'Chq./Ref.No.', 'Value Dt',
@@ -26,6 +26,19 @@ class HDFCBankStatements(object):
         self.__set_pdf_text_stats()
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
+
+    def __is_date(self, input_string):
+        is_date = False
+        try:
+            datetime.datetime.strptime(input_string, '%d/%m/%y')
+            is_date = True
+        except Exception as e:
+            try:
+                datetime.datetime.strptime(input_string, '%d/%m/%Y')
+                is_date = True
+            except Exception as e:
+                pass
+        return is_date
 
     def __get_date(self, date_input):
         all_date_list = []
@@ -55,33 +68,59 @@ class HDFCBankStatements(object):
             for index in xrange(0, len(number_list)):
                 number_list[index] = self.__get_amount(number_list[index])
             return number_list
+        elif len(number_list) == 1:
+            return [0.0, self.__get_amount(number_list[0])]
+        else:
+            pass
         return [0.0, 0.0]
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
-            if len(data_list) in [MIN_COLUMNS, MAX_COLUMNS]:
-                statement_dict = {
+            if len(data_list) == MIN_COLUMNS:
+                statement_dict.update({
                     'value_date': self.__get_date(data_list[0]),
                     'narration': str(data_list[1]),
                     'reference_no': str(data_list[2]),
                     'transaction_date': self.__get_date(data_list[3]),
-                }
-                if len(data_list) == MIN_COLUMNS:
+                    'withdraw_deposit': self.__deconcatinate_numbers(data_list[4])[0],
+                    'closing_balance': self.__deconcatinate_numbers(data_list[4])[1],
+                })
+            elif len(data_list) == MIN_COLUMNS + 1:
+                if self.__is_date(data_list[2]):
                     statement_dict.update({
-                        'withdraw_deposit': self.__deconcatinate_numbers(data_list[4])[0],
-                        'closing_balance': self.__deconcatinate_numbers(data_list[4])[1],
+                        'value_date': self.__get_date(data_list[0]),
+                        'narration': str(data_list[1]),
+                        'reference_no': str(data_list[1]),
+                        'transaction_date': self.__get_date(data_list[2]),
+                        'withdraw_deposit': self.__get_amount(data_list[-2]) if self.__get_amount(data_list[-2]) else self.__get_amount(data_list[-3]),
+                        'closing_balance': self.__get_amount(data_list[-1]),
                     })
-                elif len(data_list) == MAX_COLUMNS:
+                elif self.__is_date(data_list[3]):
                     statement_dict.update({
-                        'withdraw_deposit': self.__get_amount(data_list[4]),
-                        'closing_balance': self.__get_amount(data_list[5]),
+                        'value_date': self.__get_date(data_list[0]),
+                        'narration': str(data_list[1]),
+                        'reference_no': str(data_list[2]),
+                        'transaction_date': self.__get_date(data_list[3]),
+                        'withdraw_deposit': self.__get_amount(data_list[-2]),
+                        'closing_balance': self.__get_amount(data_list[-1]),
                     })
                 else:
-                    statement_dict = {}
-                if statement_dict:
-                    self.transactions[statement_dict[
-                        'transaction_date']] = statement_dict['closing_balance']
+                    pass
+            elif len(data_list) == MAX_COLUMNS:
+                statement_dict.update({
+                    'value_date': self.__get_date(data_list[0]),
+                    'narration': str(data_list[1]),
+                    'reference_no': str(data_list[2]),
+                    'transaction_date': self.__get_date(data_list[3]),
+                    'withdraw_deposit': self.__get_amount(data_list[-2]) if self.__get_amount(data_list[-2]) else self.__get_amount(data_list[-3]),
+                    'closing_balance': self.__get_amount(data_list[-1]),
+                })
+            else:
+                pass
+            if statement_dict:
+                self.transactions[statement_dict[
+                    'transaction_date']] = statement_dict['closing_balance']
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
@@ -125,17 +164,28 @@ class HDFCBankStatements(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        opening_balance = None
+        balance = None
         for index in xrange(0, len(self.raw_table_data.get('body', []))):
             if len(self.raw_table_data['body'][index]) == 5 and self.raw_table_data['body'][index][0] == 'Opening Balance':
                 if index + 1 < len(self.raw_table_data['body']) and len(self.raw_table_data['body'][index + 1]):
-                    opening_balance = self.raw_table_data['body'][index + 1][0]
+                    balance = self.raw_table_data['body'][index + 1][0]
                     try:
-                        opening_balance = int(
-                            float(opening_balance.replace(',', '')))
+                        balance = int(
+                            float(balance.replace(',', '')))
                     except Exception as e:
-                        opening_balance = None
-        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
+                        balance = None
+        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+            opening_balance = None
+            opening_balance_statement = {}
+            for statement in self.statements:
+                if statement['transaction_date'] != self.stats['start_date']:
+                    break
+                opening_balance_statement = statement
+            if opening_balance_statement:
+                opening_balance = opening_balance_statement['closing_balance']
+            if opening_balance != None:
+                balance = opening_balance
+        return balance if balance else self.transactions[self.stats['start_date']]
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
