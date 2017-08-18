@@ -50,19 +50,28 @@ class BankStatementsRawData(object):
         self.raw_table_data = self.__get_raw_table_data()
         self.pdf_text = self.__get_pdf_text()
 
-    def __get_tabula_params(self, password_on=False):
-        if password_on:
+    def __get_tabula_params(self, password_type='original'):
+        if password_type == 'original':
             return self.tabula_params
-        else:
+        elif password_type == 'empty':
             tabula_params = deepcopy(self.tabula_params)
             tabula_params['password'] = ""
             return tabula_params
+        elif password_type == 'capilatized':
+            tabula_params = deepcopy(self.tabula_params)
+            tabula_params['password'] = self.password.upper()
+            return tabula_params
+        else:
+            return self.tabula_params
 
     def __get_pdf_json(self):
         try:
-            return read_pdf(self.pdf_path, **self.__get_tabula_params(True))
+            return read_pdf(self.pdf_path, **self.__get_tabula_params('original'))
         except Exception as e:
-            return read_pdf(self.pdf_path, **self.__get_tabula_params(False))
+            try:
+                return read_pdf(self.pdf_path, **self.__get_tabula_params('empty'))
+            except Exception as e:
+                return read_pdf(self.pdf_path, **self.__get_tabula_params('capilatized'))
 
     def __get_decrypted_pdf_path(self):
         if '.pdf' in self.pdf_path:
@@ -71,24 +80,35 @@ class BankStatementsRawData(object):
         else:
             self.pdf_path + '_decrypted.pdf'
 
-    def __get_pdf_text(self):
+    def __pdf_decryption(self, password_type='original'):
+        pdf_decryption = False
         pdf_text = ''
+        pdf_path_decrypt = self.__get_decrypted_pdf_path()
+        if password_type == 'capilatized':
+            password = self.password.upper()
+        elif password_type == 'empty':
+            password = ''
+        else:
+            password = self.password
+        try:
+            decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
+                password=password, pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
+            decrypt_command_output = subprocess.call(
+                decrypt_command, shell=True)
+            if decrypt_command_output == 0:
+                pdf_decryption = True
+        except Exception as e:
+            pass
+        return pdf_decryption
+
+    def __get_pdf_text(self):
+        for password_type in ['original', 'empty', 'capilatized']:
+            pdf_decryption = self.__pdf_decryption(password_type)
+            if pdf_decryption:
+                break
         pdf_path_decrypt = self.__get_decrypted_pdf_path()
         file_clean_command = 'rm {pdf_path_decrypt}'.format(
             pdf_path_decrypt=pdf_path_decrypt)
-        try:
-            decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
-                password=self.password, pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
-            decrypt_command_output = subprocess.call(
-                decrypt_command, shell=True)
-            if decrypt_command_output != 0:
-                decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
-                    password='', pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
-                subprocess.call(decrypt_command, shell=True)
-        except Exception as e:
-            decrypt_command = 'qpdf --password={password} --decrypt {pdf_path} {pdf_path_decrypt}'.format(
-                password='', pdf_path=self.pdf_path, pdf_path_decrypt=pdf_path_decrypt)
-            subprocess.call(decrypt_command, shell=True)
         pdf_text = self.__pdf_to_text(pdf_path_decrypt)
         subprocess.call(file_clean_command, shell=True)
         return pdf_text
