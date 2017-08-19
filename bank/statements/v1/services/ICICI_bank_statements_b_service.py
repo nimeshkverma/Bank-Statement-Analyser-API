@@ -84,16 +84,25 @@ class ICICIBankStatementsB(object):
                 self.statements.append(
                     statement_dict) if statement_dict else None
 
+    def __get_pdf_dates(self):
+        pdf_dates = []
+        from_to_string_date_list = re.findall(
+            r'INR for the period [a-zA-Z]+\s\d{2}[,]\s\d{4} - [a-zA-Z]+\s\d{2}[,]\s\d{4}', self.pdf_text)
+        for from_to_string_date in from_to_string_date_list:
+            pdf_dates.append(from_to_string_date.split(' - ')[-1])
+            pdf_dates.append(from_to_string_date.split(
+                ' - ')[0].split('INR for the period ')[-1])
+        return pdf_dates
+
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
-        all_string_date_list = re.findall(
-            r'[a-zA-Z]+\s\d{2}[,]\s\d{4}', self.pdf_text)
+        all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                    datetime.datetime.strptime(string_date, '%B %d, %Y'))
             except Exception as e:
                 pass
         self.stats['pdf_text_start_date'] = min(
@@ -207,12 +216,13 @@ class ICICIBankStatementsB(object):
     def __json_monthly_stats(self, threshhold):
         monthly_stats = {}
         for day, balance in self.all_day_transactions.iteritems():
-            if monthly_stats.get(day.month):
-                monthly_stats[day.month]['all_day_count'] += 1
-                monthly_stats[day.month]['balance_above_day_count'] = monthly_stats[day.month][
-                    'balance_above_day_count'] + 1 if balance >= threshhold else monthly_stats[day.month]['balance_above_day_count']
+            month_year_key = day.strftime("%b-%Y")
+            if monthly_stats.get(month_year_key):
+                monthly_stats[month_year_key]['all_day_count'] += 1
+                monthly_stats[month_year_key]['balance_above_day_count'] = monthly_stats[month_year_key][
+                    'balance_above_day_count'] + 1 if balance >= threshhold else monthly_stats[month_year_key]['balance_above_day_count']
             else:
-                monthly_stats[day.month] = {
+                monthly_stats[month_year_key] = {
                     'all_day_count': 1,
                     'balance_above_day_count': 1 if balance >= threshhold else 0,
                 }

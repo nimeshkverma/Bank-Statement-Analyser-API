@@ -7,7 +7,7 @@ class StatementAnalyserSerializer(serializers.Serializer):
     document_type_id = serializers.IntegerField()
 
     def bank_data(self):
-        send_bank_statement_analysis_mail.delay(self.validated_data)
+        send_bank_statement_analysis_mail(self.validated_data)
         return {
             "email": "sent"
         }

@@ -216,12 +216,13 @@ class KotakBankStatementsA(object):
     def __json_monthly_stats(self, threshhold):
         monthly_stats = {}
         for day, balance in self.all_day_transactions.iteritems():
-            if monthly_stats.get(day.month):
-                monthly_stats[day.month]['all_day_count'] += 1
-                monthly_stats[day.month]['balance_above_day_count'] = monthly_stats[day.month][
-                    'balance_above_day_count'] + 1 if balance >= threshhold else monthly_stats[day.month]['balance_above_day_count']
+            month_year_key = day.strftime("%b-%Y")
+            if monthly_stats.get(month_year_key):
+                monthly_stats[month_year_key]['all_day_count'] += 1
+                monthly_stats[month_year_key]['balance_above_day_count'] = monthly_stats[month_year_key][
+                    'balance_above_day_count'] + 1 if balance >= threshhold else monthly_stats[month_year_key]['balance_above_day_count']
             else:
-                monthly_stats[day.month] = {
+                monthly_stats[month_year_key] = {
                     'all_day_count': 1,
                     'balance_above_day_count': 1 if balance >= threshhold else 0,
                 }
