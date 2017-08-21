@@ -201,7 +201,9 @@ class SBIBankStatements(object):
         all_day_transactions = {}
         all_day_transactions[self.stats[
             'pdf_text_start_date']] = self.__get_first_day_balance()
-        for day_no in xrange(1, self.stats['days']):
+        number_of_days = (self.stats[
+                          'end_date'] - self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
+        for day_no in xrange(1, number_of_days):
             day_date = self.stats['pdf_text_start_date'] + \
                 datetime.timedelta(days=day_no)
             if day_date in self.transactions.keys():
@@ -219,6 +221,16 @@ class SBIBankStatements(object):
             1 if self.stats['pdf_text_start_date'].month != 12 else 1
         year = self.stats['pdf_text_start_date'].year if self.stats[
             'pdf_text_start_date'].month != 12 else self.stats['pdf_text_start_date'].year + 1
+        return datetime.datetime(year, month, day)
+
+    def __min_date(self):
+        if self.stats['end_date'].day <= MAX_START_DAY_OF_MONTH:
+            return self.stats['end_date']
+        day = 1
+        month = self.stats['end_date'].month + \
+            1 if self.stats['end_date'].month != 12 else 1
+        year = self.stats['end_date'].year if self.stats[
+            'end_date'].month != 12 else self.stats['end_date'].year + 1
         return datetime.datetime(year, month, day)
 
     def __max_date(self):
