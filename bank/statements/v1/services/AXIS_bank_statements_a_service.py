@@ -244,7 +244,7 @@ class AXISBankStatementsA(object):
     def __json_monthly_stats(self, threshhold):
         monthly_stats = {}
         for day, balance in self.all_day_transactions.iteritems():
-            month_year_key = day.strftime("%b-%Y")
+            month_year_key = day.strftime("%m-%Y")
             if monthly_stats.get(month_year_key):
                 monthly_stats[month_year_key]['all_day_count'] += 1
                 monthly_stats[month_year_key]['balance_above_day_count'] = monthly_stats[month_year_key][

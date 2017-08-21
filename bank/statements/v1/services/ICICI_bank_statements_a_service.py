@@ -62,6 +62,21 @@ class ICICIBankStatementsA(object):
                 if statement_dict:
                     self.transactions[statement_dict[
                         'transaction_date']] = statement_dict['balance']
+            elif len(data_list) in [7]:
+                statement_dict = {
+                    'value_date': datetime.datetime.strptime(data_list[0], '%d/%m/%Y'),
+                    'transaction_date': datetime.datetime.strptime(data_list[1], '%d/%m/%Y'),
+                    'cheque_no': data_list[2],
+                    'transaction_remark': str(data_list[3]),
+                    'withdrawal_amount': self.__get_amount(data_list[4]),
+                    'deposit_amount': self.__get_amount(data_list[5]),
+                    'balance': self.__get_amount(data_list[6])
+                }
+                self.transactions[statement_dict[
+                    'transaction_date']] = statement_dict['balance']
+            else:
+                pass
+
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
@@ -196,7 +211,7 @@ class ICICIBankStatementsA(object):
     def __json_monthly_stats(self, threshhold):
         monthly_stats = {}
         for day, balance in self.all_day_transactions.iteritems():
-            month_year_key = day.strftime("%b-%Y")
+            month_year_key = day.strftime("%m-%Y")
             if monthly_stats.get(month_year_key):
                 monthly_stats[month_year_key]['all_day_count'] += 1
                 monthly_stats[month_year_key]['balance_above_day_count'] = monthly_stats[month_year_key][
