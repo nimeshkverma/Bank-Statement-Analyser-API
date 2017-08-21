@@ -326,10 +326,11 @@ class BankStatementsAnalyser(object):
             writer.writerow(['', ''])
             writer.writerow(
                 ['Month-Year', 'No of day Balance is above EMI', 'No of days Analysed'])
-            for monthly_stats_key, monthly_stats_value in self.bank_data['monthly_stats'].iteritems():
-                writer.writerow([monthly_stats_key, monthly_stats_value[
-                                'balance_above_day_count'], monthly_stats_value['all_day_count']])
-
+            monthly_stats_keys = self.bank_data['monthly_stats'].keys()
+            monthly_stats_keys.sort()
+            for monthly_stats_key in monthly_stats_keys:
+                writer.writerow([monthly_stats_key, self.bank_data['monthly_stats'][monthly_stats_key][
+                                'balance_above_day_count'], self.bank_data['monthly_stats'][monthly_stats_key]['all_day_count']])
             for i in xrange(0, 25 - len(self.bank_data['monthly_stats'])):
                 writer.writerow([''])
 
@@ -422,10 +423,11 @@ class BankStatementsAnalyserTool(object):
             writer.writerow(['', ''])
             writer.writerow(
                 ['Month-Year', 'No of day Balance is above EMI', 'No of days Analysed'])
-            for monthly_stats_key, monthly_stats_value in self.bank_data['monthly_stats'].iteritems():
-                writer.writerow([monthly_stats_key, monthly_stats_value[
-                                'balance_above_day_count'], monthly_stats_value['all_day_count']])
-
+            monthly_stats_keys = self.bank_data['monthly_stats'].keys()
+            monthly_stats_keys.sort()
+            for monthly_stats_key in monthly_stats_keys:
+                writer.writerow([monthly_stats_key, self.bank_data['monthly_stats'][monthly_stats_key][
+                                'balance_above_day_count'], self.bank_data['monthly_stats'][monthly_stats_key]['all_day_count']])
             for i in xrange(0, 25 - len(self.bank_data['monthly_stats'])):
                 writer.writerow([''])
 
