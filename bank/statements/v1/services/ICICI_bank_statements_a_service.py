@@ -33,14 +33,20 @@ class ICICIBankStatementsA(object):
         except Exception as e:
             return 0
 
+    def __get_date(self, date_input):
+        try:
+            return datetime.datetime.strptime(date_input, '%d/%m/%Y')
+        except Exception as e:
+            return datetime.datetime.strptime(date_input, '%d-%m-%Y')
+
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
             if len(data_list) in [8, 9]:
                 statement_dict = {
                     'sr_no': data_list[0],
-                    'value_date': datetime.datetime.strptime(data_list[1], '%d/%m/%Y'),
-                    'transaction_date': datetime.datetime.strptime(data_list[2], '%d/%m/%Y'),
+                    'value_date': self.__get_date(data_list[1]),
+                    'transaction_date': self.__get_date(data_list[2]),
                     'cheque_no': data_list[3],
                 }
                 if len(data_list) == 8:
@@ -64,8 +70,8 @@ class ICICIBankStatementsA(object):
                         'transaction_date']] = statement_dict['balance']
             elif len(data_list) in [7]:
                 statement_dict = {
-                    'value_date': datetime.datetime.strptime(data_list[0], '%d/%m/%Y'),
-                    'transaction_date': datetime.datetime.strptime(data_list[1], '%d/%m/%Y'),
+                    'value_date': self.__get_date(data_list[0]),
+                    'transaction_date': self.__get_date(data_list[1]),
                     'cheque_no': data_list[2],
                     'transaction_remark': str(data_list[3]),
                     'withdrawal_amount': self.__get_amount(data_list[4]),
