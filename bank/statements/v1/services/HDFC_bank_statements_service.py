@@ -174,6 +174,16 @@ class HDFCBankStatements(object):
                             float(balance.replace(',', '')))
                     except Exception as e:
                         balance = None
+        if balance == None:
+            opening_balance_strings = re.findall(
+                r'Opening Balance\s*[0-9,]+\.\d{2}', self.pdf_text)
+            for opening_balance_string in opening_balance_strings:
+                for balance_string in re.findall(r'[0-9,]+\.\d{1,2}', opening_balance_string):
+                    try:
+                        balance = int(float(balance_string.replace(',', '')))
+                        break
+                    except Exception as e:
+                        pass
         if self.stats['start_date'] == self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}
@@ -185,7 +195,7 @@ class HDFCBankStatements(object):
                 opening_balance = opening_balance_statement['closing_balance']
             if opening_balance != None:
                 balance = opening_balance
-        return balance if balance != None else self.transactions[self.stats['start_date']]
+        return balance if balance != None else self.statements[0]['closing_balance']
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}

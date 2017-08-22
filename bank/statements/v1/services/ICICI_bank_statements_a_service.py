@@ -102,8 +102,7 @@ class ICICIBankStatementsA(object):
         all_date_list = []
         for string_date in all_string_date_list:
             try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                all_date_list.append(self.__get_date(string_date))
             except Exception as e:
                 pass
         self.stats['pdf_text_start_date'] = min(

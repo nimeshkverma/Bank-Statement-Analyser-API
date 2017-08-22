@@ -175,7 +175,7 @@ class SBIBankStatements(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        balance = 0.0
+        balance = None
         balance_string = re.findall(
             r'Balance as on \d{1,2} [a-zA-Z]{3} \d{4}[^\n]+', self.pdf_text)
         if balance_string and '(cid:9)' in balance_string[0]:
@@ -195,7 +195,7 @@ class SBIBankStatements(object):
                 opening_balance = opening_balance_statement['balance']
             if opening_balance != None:
                 balance = opening_balance
-        return balance
+        return balance if balance != None else self.statements[0]['balance']
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
