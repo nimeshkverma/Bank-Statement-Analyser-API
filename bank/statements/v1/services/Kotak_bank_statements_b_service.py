@@ -3,7 +3,7 @@ import datetime
 from copy import deepcopy
 
 MIN_COLUMNS = 4
-MAX_COLUMNS = 5
+MAX_COLUMNS = 6
 
 HEADER = set([u'Date', u'Narration', u'Chq/Ref No.',
               u'Withdrawal (Dr)/Deposit (Cr)', u'Balance'])
@@ -15,7 +15,7 @@ class KotakBankStatementsB(object):
     """Class to analyse the data obtained from KOTAK Type B Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
-        self.raw_table_data = raw_table_data
+        self.raw_table_data = deepcopy(raw_table_data)
         self.pdf_text = pdf_text
         self.statements = []
         self.transactions = {}
@@ -98,12 +98,22 @@ class KotakBankStatementsB(object):
         opening_balance = None
         opening_balance_statement = {}
         for statement in self.statements:
-            if statement['transaction_date'] != self.stats['start_date']:
+            if statement['transaction_date'] != self.stats['pdf_text_start_date']:
                 break
             opening_balance_statement = statement
         if opening_balance_statement:
             opening_balance = opening_balance_statement['balance']
         return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
+        if opening_balance == None:
+            if self.statements[0].get('transaction_type') == 'withdraw':
+                opening_balance = self.statements[0].get(
+                    'balance', 0) + self.statements[0].get('withdraw_deposit', 0)
+            elif self.statements[0].get('transaction_type') == 'deposit':
+                opening_balance = self.statements[0].get(
+                    'balance', 0) - self.statements[0].get('withdraw_deposit', 0)
+            else:
+                opening_balance = self.statements[0].get('balance', 0)
+        return opening_balance
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
