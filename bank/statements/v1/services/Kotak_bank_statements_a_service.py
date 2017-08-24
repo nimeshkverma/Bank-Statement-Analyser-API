@@ -113,7 +113,6 @@ class KotakBankStatementsA(object):
             opening_balance_statement = statement
         if opening_balance_statement:
             opening_balance = opening_balance_statement['balance']
-        return opening_balance if opening_balance else self.transactions[self.stats['start_date']]
         if opening_balance == None:
             if self.statements[0].get('transaction_type') == 'withdraw':
                 opening_balance = self.statements[0].get(
