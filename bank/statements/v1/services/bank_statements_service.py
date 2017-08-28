@@ -26,6 +26,8 @@ from SBI_bank_statements_service import SBIBankStatements
 from Kotak_bank_statements_a_service import KotakBankStatementsA
 from Kotak_bank_statements_b_service import KotakBankStatementsB
 from Kotak_bank_statements_c_service import KotakBankStatementsC
+from IDBI_bank_statements_service import IDBIBankStatements
+from IDFC_bank_statements_service import IDFCBankStatements
 
 from database_service import Database
 from email_service import send_mail
@@ -194,10 +196,22 @@ class BankStatements(object):
             'kotak_c': {
                 'unique_header': 'Account Statement',
                 'class': KotakBankStatementsC,
+            },
+            'idbi_a': {
+                'unique_header': 'Srl',
+                'class': IDBIBankStatements,
+            },
+            'idbi_b': {
+                'unique_header': 'Sl',
+                'class': IDBIBankStatements,
+            },
+            'idfc': {
+                'unique_header': 'Total Credit',
+                'class': IDFCBankStatements,
             }
         }
-        self.banks = ['kotak_c', 'kotak_b', 'kotak_a', 'icici_a', 'hdfc',
-                      'axis_a', 'axis_b', 'sbi', 'icici_b']
+        self.banks = ['idfc', 'idbi_a', 'idbi_b', 'kotak_c', 'kotak_b',
+                      'kotak_a', 'icici_a', 'hdfc', 'axis_a', 'axis_b', 'sbi', 'icici_b', ]
         self.bank_name = None
         self.specific_bank = self.__get_specific_bank()
 
