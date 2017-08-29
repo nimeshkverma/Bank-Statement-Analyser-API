@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 8
+MIN_COLUMNS = 7
 MAX_COLUMNS = 8
 
 HEADER = set(['Sl. No.', 'Date', 'Description', 'Chq / Ref number',
