@@ -38,14 +38,18 @@ class IDBIBankStatements(object):
 
     def __get_date(self, date_input):
         all_string_date_list = re.findall(
-            r'\d{2}/\d{2}/\d{2}', date_input)
+            r'\d{2}/\d{2}/\d{2,4}', date_input)
         all_date_list = []
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
                     datetime.datetime.strptime(string_date, '%d/%m/%y'))
             except Exception as e:
-                pass
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                except Exception as e:
+                    pass
         return all_date_list[0]
 
     def __get_statement_set_transaction(self, data_list):
@@ -98,7 +102,7 @@ class IDBIBankStatements(object):
 
     def __get_pdf_dates(self):
         from_to_string_date_list = re.findall(
-            r'\d{2}/\d{2}/\d{2} [tT]o \d{2}/\d{2}/\d{2}', self.pdf_text)
+            r'\d{2}/\d{2}/\d{2,4} [tT]o \d{2}/\d{2}/\d{2,4}', self.pdf_text)
         pdf_dates = []
         for string_date in from_to_string_date_list:
             pdf_dates += string_date.upper().split(' TO ')
