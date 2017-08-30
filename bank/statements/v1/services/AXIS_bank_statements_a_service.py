@@ -130,11 +130,11 @@ class AXISBankStatementsA(object):
         for data_list in self.raw_table_data.get('body', []):
             if len(data_list) == 2 and data_list[0] == 'OPENING BALANCE':
                 balance = self.__get_amount(data_list[1])
-        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+        if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}
             for statement in self.statements:
-                if statement['transaction_date'] != self.stats['start_date']:
+                if statement['transaction_date'] > self.stats['start_date']:
                     break
                 opening_balance_statement = statement
             if opening_balance_statement:

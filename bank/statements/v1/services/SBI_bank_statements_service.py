@@ -184,11 +184,11 @@ class SBIBankStatements(object):
             balance = self.__get_amount(balance_string[0].split(':')[-1])
         else:
             pass
-        if self.stats['start_date'] == self.stats['pdf_text_start_date']:
+        if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}
             for statement in self.statements:
-                if statement['transaction_date'] != self.stats['start_date']:
+                if statement['transaction_date'] > self.stats['start_date']:
                     break
                 opening_balance_statement = statement
             if opening_balance_statement:
