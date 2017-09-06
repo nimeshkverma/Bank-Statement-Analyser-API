@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 4
+MIN_COLUMNS = 3
 MAX_COLUMNS = 10
 
 HEADER = set(['Opening Balance', 'Total Debit', 'Total Credit', 'Closing Balance',
