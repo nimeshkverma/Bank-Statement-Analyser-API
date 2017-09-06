@@ -108,11 +108,13 @@ class HDFCBankStatements(object):
                 else:
                     pass
             elif len(data_list) == MAX_COLUMNS:
+                transaction_date = self.__get_date(data_list[3]) if self.__is_date(
+                    data_list[3]) else self.__get_date(data_list[-3])
                 statement_dict.update({
                     'value_date': self.__get_date(data_list[0]),
                     'narration': str(data_list[1]),
                     'reference_no': str(data_list[2]),
-                    'transaction_date': self.__get_date(data_list[3]),
+                    'transaction_date': transaction_date,
                     'withdraw_deposit': self.__get_amount(data_list[-2]) if self.__get_amount(data_list[-2]) else self.__get_amount(data_list[-3]),
                     'closing_balance': self.__get_amount(data_list[-1]),
                 })
