@@ -100,6 +100,9 @@ class ICICIBankStatementsA(object):
         self.stats['end_date'] = max(self.transactions.keys())
         all_string_date_list = re.findall(
             r'(from\s?\d{2}/\d{2}/\d{2,4}\s?to\s?\d{2}/\d{2}/\d{2,4})', self.pdf_text)
+        if not all_string_date_list:
+            all_string_date_list = re.findall(
+                r'(\d{2}/\d{2}/\d{2,4})', self.pdf_text)
         all_date_list = []
         for string_date in all_string_date_list:
             try:
