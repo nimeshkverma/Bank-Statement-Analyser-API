@@ -98,7 +98,8 @@ class ICICIBankStatementsA(object):
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
-        all_string_date_list = re.findall(r'(\d+/\d+/\d+)', self.pdf_text)
+        all_string_date_list = re.findall(
+            r'(\d{2}/\d{2}/\d{2,4})', self.pdf_text)
         all_date_list = []
         for string_date in all_string_date_list:
             try:
