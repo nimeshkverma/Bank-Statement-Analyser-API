@@ -496,13 +496,12 @@ class BankStatementsUpsertTool(object):
                 time.sleep(3)
 
     def __dump_bank_data_to_dynamo(self, customer_id):
-        print customer_id
+        customer_id = '8191'
         data = {
             "created_at": int(time.time()),
             "customer_id": customer_id,
             "data": BankStatementsAnalyser(customer_id, self.document_type_id).bank_data
         }
-        print 'done', customer_id
         url = settings.DYNAMO_DATA_DUMP['url']
         headers = {
             settings.DYNAMO_DATA_DUMP['auth_key']: settings.DYNAMO_DATA_DUMP['auth_value'],
