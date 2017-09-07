@@ -496,7 +496,6 @@ class BankStatementsUpsertTool(object):
                 time.sleep(3)
 
     def __dump_bank_data_to_dynamo(self, customer_id):
-        customer_id = '8191'
         data = {
             "created_at": int(time.time()),
             "customer_id": customer_id,

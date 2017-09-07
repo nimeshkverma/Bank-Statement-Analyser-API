@@ -45,7 +45,7 @@ def send_bank_statement_analysis_tool_mail(threshold, bank_statements_pdf, bank_
         bank_statements_pdf, bank_statements_pdf_password, threshold).send_bank_analysis_email()
 
 
-@periodic_task(run_every=(crontab(hour="*", minute="*/30", day_of_week="*")), name="upsert_bank_statement_analysis")
+@periodic_task(run_every=(crontab(hour="03", minute="10", day_of_week="*")), name="upsert_bank_statement_analysis")
 def upsert_bank_statement_analysis():
     upsert_tool = bank_statements_service.BankStatementsUpsertTool()
     upsert_tool.upsert()
