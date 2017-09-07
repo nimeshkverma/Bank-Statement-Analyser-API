@@ -4,6 +4,8 @@ import requests
 import json
 from django.conf import settings
 from celery import shared_task
+from celery.task.schedules import crontab
+from celery.decorators import periodic_task
 from statements.v1.services import bank_statements_service
 
 
@@ -41,3 +43,10 @@ def dump_bank_data_to_dynamo(customer_data):
 def send_bank_statement_analysis_tool_mail(threshold, bank_statements_pdf, bank_statements_pdf_password):
     bank_statements_service.BankStatementsAnalyserTool(
         bank_statements_pdf, bank_statements_pdf_password, threshold).send_bank_analysis_email()
+
+
+@periodic_task(run_every=(crontab(hour="*", minute="*/30", day_of_week="*")), name="upsert_bank_statement_analysis")
+def upsert_bank_statement_analysis():
+    upsert_tool = bank_statements_service.BankStatementsUpsertTool()
+    upsert_tool.upsert()
+    upsert_tool.cleanup()

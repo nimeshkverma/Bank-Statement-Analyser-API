@@ -3,6 +3,7 @@ import subprocess
 import uuid
 import requests
 import json
+import time
 import datetime
 import csv
 from copy import deepcopy
@@ -472,3 +473,49 @@ class BankStatementsAnalyserTool(object):
         }
         send_mail(email_details, self.template, [csvfile])
         self.__remove_file(csvfile)
+
+
+class BankStatementsUpsertTool(object):
+
+    def __init__(self):
+        self.db = Database('backend_db')
+        self.document_type_id = '10'
+        self.customer_ids_query = self.__customer_ids_query()
+
+    def __customer_ids_query(self):
+        return """  SELECT DISTINCT customer_id 
+                    FROM analytics_bank_statement_insights 
+                    WHERE created_at >= now() - interval '24 hour';
+                """
+
+    def upsert(self):
+        rows = self.db.execute_query(self.customer_ids_query)
+        for row in rows:
+            if row.get('customer_id'):
+                self.__dump_bank_data_to_dynamo(row['customer_id'])
+                time.sleep(3)
+
+    def __dump_bank_data_to_dynamo(self, customer_id):
+        print customer_id
+        data = {
+            "created_at": int(time.time()),
+            "customer_id": customer_id,
+            "data": BankStatementsAnalyser(customer_id, self.document_type_id).bank_data
+        }
+        print 'done', customer_id
+        url = settings.DYNAMO_DATA_DUMP['url']
+        headers = {
+            settings.DYNAMO_DATA_DUMP['auth_key']: settings.DYNAMO_DATA_DUMP['auth_value'],
+            "Content-Type": "application/json",
+        }
+        request_status = None
+        try:
+            request_data = requests.post(
+                url, data=json.dumps(data), headers=headers)
+            request_status = request_data.status_code
+            print request_status, request_data.text
+        except Exception as e:
+            print e
+
+    def cleanup(self):
+        self.db.close_connection()
