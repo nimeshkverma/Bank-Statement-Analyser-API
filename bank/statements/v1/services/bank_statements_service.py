@@ -485,7 +485,7 @@ class BankStatementsUpsertTool(object):
     def __customer_ids_query(self):
         return """  SELECT DISTINCT customer_id 
                     FROM analytics_bank_statement_insights 
-                    WHERE created_at >= now() - interval '24 hour';
+                    WHERE created_at >= now() - interval '23 hour';
                 """
 
     def upsert(self):
