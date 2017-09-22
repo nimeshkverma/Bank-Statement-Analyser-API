@@ -29,6 +29,7 @@ from Kotak_bank_statements_b_service import KotakBankStatementsB
 from Kotak_bank_statements_c_service import KotakBankStatementsC
 from IDBI_bank_statements_service import IDBIBankStatements
 from IDFC_bank_statements_service import IDFCBankStatements
+from bank_statements_constants import BANK_IDENTIFIER_CONSTANTS
 
 from database_service import Database
 from email_service import send_mail
@@ -151,6 +152,151 @@ class BankStatementsRawData(object):
         return text
 
 
+class BankIdentifier(object):
+    """Class for determinsation of Specific Bank from the Bank Statements"""
+
+    def __init__(self, raw_table_data, pdf_text):
+        self.raw_table_data = raw_table_data
+        self.pdf_text = pdf_text
+        self.processed_pdf_text = ' '.join(self.pdf_text.lower().split())
+        self.raw_table_data_set = self.__raw_table_data_set()
+        self.bank_dict = {
+            'icici_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': ICICIBankStatementsA,
+            },
+            'icici_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': ICICIBankStatementsB,
+            },
+            'axis_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': AXISBankStatementsA,
+            },
+            'axis_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': AXISBankStatementsB,
+            },
+            'idbi_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': IDBIBankStatements,
+            },
+            'idbi_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': IDBIBankStatements,
+            },
+            'idfc_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': IDFCBankStatements,
+            },
+            'sbi_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': SBIBankStatements,
+            },
+            'hdfc_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': HDFCBankStatements,
+            },
+            'kotak_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': KotakBankStatementsA,
+            },
+            'kotak_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': KotakBankStatementsB,
+            },
+            'kotak_c': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'class': KotakBankStatementsC,
+            },
+        }
+        self.score_map = dict()
+        self.__get_likelihood()
+        self.bank_list = self.__bank_list()
+        print self.bank_list, self.score_map
+
+    def __raw_table_data_set(self):
+        raw_table_data_set = set()
+        for statement in self.raw_table_data['body'] + self.raw_table_data['headers']:
+            for string in statement:
+                raw_table_data_set.add(string.lower())
+        return raw_table_data_set
+
+    def __dimention_string_postive(self, dimention, dimention_string):
+        dimention_string_postive = False
+        if dimention == 'keywords':
+            if dimention_string in self.processed_pdf_text:
+                dimention_string_postive = True
+        elif dimention == 'regex_words':
+            if re.findall(dimention_string, self.processed_pdf_text):
+                dimention_string_postive = True
+        elif dimention == 'table_headers':
+            if dimention_string in self.raw_table_data_set:
+                dimention_string_postive = True
+        else:
+            pass
+        return dimention_string_postive
+
+    def __get_likelihood(self):
+        for bank_type, bank_score_dimention_dict in self.bank_dict.iteritems():
+            for dimention in ['keywords', 'regex_words', 'table_headers']:
+                dimention_score = 0.0
+                total_weight = 0.0
+                for bank_dimention_score_data in BANK_IDENTIFIER_CONSTANTS[bank_type][dimention]:
+                    total_weight += bank_dimention_score_data['weight']
+                    if self.__dimention_string_postive(dimention, bank_dimention_score_data['string']):
+                        dimention_score += bank_dimention_score_data['weight']
+                if BANK_IDENTIFIER_CONSTANTS[bank_type][dimention] and total_weight:
+                    self.bank_dict[bank_type][
+                        dimention] = dimention_score * 100.0 / total_weight
+            bank_score = 0.0
+            dimentions_considered = 0.0
+            for dimention in ['keywords', 'regex_words', 'table_headers']:
+                if self.bank_dict[bank_type][dimention] != None:
+                    dimentions_considered += 1
+                    bank_score += self.bank_dict[bank_type][dimention]
+            if dimentions_considered:
+                bank_score = bank_score / dimentions_considered
+            self.bank_dict[bank_type]['score'] = bank_score
+            if bank_score in self.score_map.keys():
+                self.score_map[bank_score].append(bank_type)
+            else:
+                self.score_map[bank_score] = [bank_type]
+
+    def __bank_list(self):
+        bank_list = []
+        scores = self.score_map.keys()
+        scores.sort()
+        scores.reverse()
+        for score in scores:
+            bank_list += self.score_map[score]
+        return bank_list
+
+
 class BankStatements(object):
     """Class for determinsation of Specific Bank from the Bank Statements"""
 
@@ -161,58 +307,46 @@ class BankStatements(object):
             self.pdf_path, self.password)
         self.raw_table_data = self.bank_statememt_raw_data.raw_table_data
         self.pdf_text = self.bank_statememt_raw_data.pdf_text
+        self.bank_identifier = BankIdentifier(
+            self.raw_table_data, self.pdf_text)
         self.bank_dict = {
             'icici_a': {
-                'unique_header': 'Transaction Remarks',
                 'class': ICICIBankStatementsA,
             },
             'icici_b': {
-                'unique_header': 'ACCOUNT TYPE',
                 'class': ICICIBankStatementsB,
             },
-            'hdfc': {
-                'unique_header': 'Narration',
+            'hdfc_a': {
                 'class': HDFCBankStatements,
             },
             'axis_a': {
-                'unique_header': 'Particulars',
                 'class': AXISBankStatementsA,
             },
             'axis_b': {
-                'unique_header': 'Bank Account',
                 'class': AXISBankStatementsB,
             },
-            'sbi': {
-                'unique_header': 'Description',
+            'sbi_a': {
                 'class': SBIBankStatements,
             },
             'kotak_a': {
-                'unique_header': 'Chq/Ref No',
                 'class': KotakBankStatementsA,
             },
             'kotak_b': {
-                'unique_header': 'Chq/Ref No.',
                 'class': KotakBankStatementsB,
             },
             'kotak_c': {
-                'unique_header': 'Account Statement',
                 'class': KotakBankStatementsC,
             },
             'idbi_a': {
-                'unique_header': 'Srl',
                 'class': IDBIBankStatements,
             },
             'idbi_b': {
-                'unique_header': 'Sl',
                 'class': IDBIBankStatements,
             },
-            'idfc': {
-                'unique_header': 'Total Credit',
+            'idfc_a': {
                 'class': IDFCBankStatements,
             }
         }
-        self.banks = ['idfc', 'idbi_a', 'idbi_b', 'kotak_c', 'kotak_b',
-                      'kotak_a', 'icici_a', 'hdfc', 'axis_a', 'axis_b', 'sbi', 'icici_b', ]
         self.bank_name = None
         self.specific_bank = self.__get_specific_bank()
 
@@ -223,11 +357,19 @@ class BankStatements(object):
         return False
 
     def __get_specific_bank(self):
-        for bank in self.banks:
-            if self.__term_in_header(self.bank_dict[bank]['unique_header']):
-                self.bank_name = bank
-                return self.bank_dict[bank]['class'](self.raw_table_data, self.pdf_text)
-        return None
+        specific_bank = None
+        for bank_name in self.bank_identifier.bank_list[:3]:
+            print bank_name, 1000000
+            try:
+                specific_bank = self.bank_dict[bank_name][
+                    'class'](self.raw_table_data, self.pdf_text)
+                self.bank_name = bank_name
+                print 1
+                break
+            except Exception as e:
+                print e
+                pass
+        return specific_bank
 
 
 class BankStatementsAnalyser(object):
