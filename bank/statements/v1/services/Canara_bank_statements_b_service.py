@@ -2,19 +2,19 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 5
+MIN_COLUMNS = 3
 MAX_COLUMNS = 10
 
 
-HEADER = set(['Txn Date', 'Value Date', 'Cheque No. Description',
-              'Debit', 'Credit', 'Balance'])
+HEADER = set(['Txn Date Value', 'Description',
+              'Ref No./Cheque', 'Debit', 'Credit', 'Balance'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class CanaraBankStatementsA(object):
-    """Class to analyse the data obtained from Canara Bank Type A"""
+class CanaraBankStatementsB(object):
+    """Class to analyse the data obtained from Canara Bank Type B"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -27,30 +27,17 @@ class CanaraBankStatementsA(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
-    def __is_date(self, input_string):
-        is_date = False
-        try:
-            datetime.datetime.strptime(input_string, '%d-%b-%Y')
-            is_date = True
-        except Exception as e:
-            try:
-                datetime.datetime.strptime(input_string, '%d-%b-%y')
-                is_date = True
-            except Exception as e:
-                pass
-        return is_date
-
     def __get_date(self, date_input):
         all_date_list = []
         all_string_date_list = re.findall(
-            r'(\d{2}-[a-zA-Z]{3}-\d{4})', date_input)
+            r'(\d{1,2} [a-zA-Z]{3} \d{4})', date_input)
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d-%b-%Y'))
+                    datetime.datetime.strptime(string_date, '%d %b %Y'))
             except Exception as e:
                 pass
-        return all_date_list[0]
+        return all_date_list[-1]
 
     def __get_amount(self, input_string):
         number = input_string.split(' ')[-1]
@@ -60,38 +47,59 @@ class CanaraBankStatementsA(object):
         except Exception as e:
             return 0
 
-    def __get_statement_set_transaction(self, data_list):
+    def __get_statement_set_transaction(self, index, partition_data='simple'):
         statement_dict = {}
         try:
-            statement_dict.update({
-                'transaction_date': self.__get_date(data_list[1]),
-                'narration': data_list[2],
-                'withdraw_deposit': self.__get_amount(data_list[-2]),
-                'balance': self.__get_amount(data_list[-1]),
-            })
-            if statement_dict:
-                self.transactions[statement_dict[
-                    'transaction_date']] = statement_dict['balance']
+            if partition_data == 'simple':
+                statement_dict.update({
+                    'transaction_date': self.__get_date(self.raw_table_data['body'][index][0]),
+                    'narration': self.raw_table_data['body'][index][1],
+                    'withdraw_deposit': self.__get_amount(self.raw_table_data['body'][index][-2]),
+                    'balance': self.__get_amount(self.raw_table_data['body'][index][-1]),
+                })
+            elif partition_data == 'splitted' and index + 1 < len(self.raw_table_data['body']) and re.findall(r'\d{4}', self.raw_table_data['body'][index + 1][0]):
+                date_year = re.findall(r'\d{4}', self.raw_table_data[
+                                       'body'][index + 1][0])[-1]
+                statement_dict.update({
+                    'transaction_date': self.__get_date(self.raw_table_data['body'][index][0].strip() + ' ' + date_year),
+                    'narration': self.raw_table_data['body'][index][1],
+                    'withdraw_deposit': self.__get_amount(self.raw_table_data['body'][index][-2]),
+                    'balance': self.__get_amount(self.raw_table_data['body'][index][-1]),
+                })
+            else:
+                pass
         except Exception as e:
-            print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
+            print "Following error occured while processing {data_list} : {error}".format(data_list=str(self.raw_table_data['body'][index]), error=str(e))
+        if statement_dict:
+            self.transactions[statement_dict[
+                'transaction_date']] = statement_dict['balance']
         return statement_dict
 
     def __set_statements_and_transaction(self):
-        for data_list in self.raw_table_data.get('body', []):
-            if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
-                statement_dict = self.__get_statement_set_transaction(
-                    data_list)
-                self.statements.append(
-                    statement_dict) if statement_dict else None
+        statement_count = len(self.raw_table_data.get('body', []))
+        statement_dict = None
+        index = 0
+        while index < statement_count:
+            if not HEADER.intersection(set(self.raw_table_data['body'][index])) and self.raw_table_data['body'][index] and MIN_COLUMNS <= len(self.raw_table_data['body'][index]) <= MAX_COLUMNS:
+                if re.findall(r'\d{1,2} [a-zA-Z]{3} \d{4}', self.raw_table_data['body'][index][0]):
+                    statement_dict = self.__get_statement_set_transaction(
+                        index, 'simple')
+                elif re.findall(r'\d{1,2} [a-zA-Z]{3}', self.raw_table_data['body'][index][0]):
+                    statement_dict = self.__get_statement_set_transaction(
+                        index, 'splitted')
+                else:
+                    pass
+            index += 1
+            self.statements.append(statement_dict) if statement_dict else None
 
     def __get_pdf_dates(self):
         pdf_dates = []
         try:
             from_to_string_date_list = re.findall(
-                r'(\d{2}-\d{2}-\d{4}(\s+)?to(\s+)?\d{2}-\d{2}-\d{4})', self.pdf_text)[0]
+                r'(Account Statement from(\s+)?\d{2} [a-zA-Z]{3} \d{4}(\s+)?to(\s+)?\d{2} [a-zA-Z]{3} \d{4})', self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
-                for date_string in re.findall(r'(\d{2}-\d{2}-\d{4})', from_to_string_date):
-                    pdf_dates.append(date_string)
+                pdf_dates += re.findall(r'\d{2} [a-zA-Z]{3} \d{4}',
+                                        from_to_string_date)
         except Exception as e:
             pass
         return pdf_dates
@@ -101,16 +109,14 @@ class CanaraBankStatementsA(object):
         self.stats['end_date'] = max(self.transactions.keys())
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
-        print all_string_date_list
         for string_date in all_string_date_list:
-            for strp_string in ['%d-%m-%Y']:
+            for strp_string in ['%d %b %Y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))
                     break
                 except Exception as e:
                     pass
-        print all_date_list
         if all_date_list and min(all_date_list) <= self.stats['start_date']:
             self.stats['pdf_text_start_date'] = min(all_date_list)
         else:
@@ -125,13 +131,6 @@ class CanaraBankStatementsA(object):
 
     def __get_first_day_balance(self):
         balance = None
-        try:
-            for data_list in self.raw_table_data.get('body', []):
-                if len(data_list) == 2 and "balance" in data_list[0].lower():
-                    balance = self.__get_amount(data_list[1])
-                    break
-        except:
-            pass
         if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}
@@ -264,6 +263,6 @@ class CanaraBankStatementsA(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'Canara Type A',
+            'bank_name': 'Canara Type B',
         }
         return data
