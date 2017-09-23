@@ -2,19 +2,19 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 4
-MAX_COLUMNS = 4
+MIN_COLUMNS = 5
+MAX_COLUMNS = 6
 
 
-HEADER = set(['Date', 'Transaction Details',
-              'Withdrawals', 'Deposits', 'Balance'])
+HEADER = set(['Txn Date', 'Value Date', 'Cheque No. Description',
+              'Debit', 'Credit', 'Balance'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class CITIBankStatementsA(object):
-    """Class to analyse the data obtained from CITI Bank Type A"""
+class CanaraBankStatementsA(object):
+    """Class to analyse the data obtained from Canara Bank Type A"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -27,34 +27,46 @@ class CITIBankStatementsA(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
+    def __is_date(self, input_string):
+        is_date = False
+        try:
+            datetime.datetime.strptime(input_string, '%d-%b-%Y')
+            is_date = True
+        except Exception as e:
+            try:
+                datetime.datetime.strptime(input_string, '%d-%b-%y')
+                is_date = True
+            except Exception as e:
+                pass
+        return is_date
+
     def __get_date(self, date_input):
         all_date_list = []
-        all_string_date_list = re.findall(r'(\d{2}/\d{2}/\d{2,4})', date_input)
+        all_string_date_list = re.findall(
+            r'(\d{2}-[a-zA-Z]{3}-\d{4})', date_input)
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                    datetime.datetime.strptime(string_date, '%d-%b-%Y'))
             except Exception as e:
-                try:
-                    all_date_list.append(
-                        datetime.datetime.strptime(string_date, '%d/%m/%y'))
-                except Exception as e:
-                    pass
+                pass
         return all_date_list[0]
 
     def __get_amount(self, input_string):
-        comma_remove_input_string = input_string.replace(',', '')
+        number = input_string.split(' ')[-1]
+        comma_remove_input_string = number.replace(',', '')
         try:
             return int(float(comma_remove_input_string))
         except Exception as e:
             return 0
 
     def __get_statement_set_transaction(self, data_list):
+        print data_list
         statement_dict = {}
         try:
             statement_dict.update({
-                'transaction_date': self.__get_date(data_list[0]),
-                'transaction_details': str(data_list[1]),
+                'transaction_date': self.__get_date(data_list[1]),
+                'narration': data_list[2],
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             })
@@ -63,6 +75,7 @@ class CITIBankStatementsA(object):
                     'transaction_date']] = statement_dict['balance']
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
+        print statement_dict
         return statement_dict
 
     def __set_statements_and_transaction(self):
@@ -77,10 +90,10 @@ class CITIBankStatementsA(object):
         pdf_dates = []
         try:
             from_to_string_date_list = re.findall(
-                r'(Statement Period:(\s+)?[a-zA-Z]{3,9} \d{2},\d{4} to [a-zA-Z]{3,9} \d{2},\d{4})', self.pdf_text)[0]
+                r'(\d{2}-\d{2}-\d{4}(\s+)?to(\s+)?\d{2}-\d{2}-\d{4})', self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
-                pdf_dates += re.findall(r'[a-zA-Z]{3,9} \d{2},\d{4}',
-                                        from_to_string_date)
+                for date_string in re.findall(r'(\d{2}-\d{2}-\d{4})', from_to_string_date):
+                    pdf_dates.append(date_string)
         except Exception as e:
             pass
         return pdf_dates
@@ -90,32 +103,35 @@ class CITIBankStatementsA(object):
         self.stats['end_date'] = max(self.transactions.keys())
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
+        print all_string_date_list
         for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%B %d,%Y'))
-            except Exception as e:
+            for strp_string in ['%d-%m-%Y']:
                 try:
                     all_date_list.append(
-                        datetime.datetime.strptime(string_date, '%B %d,%y'))
+                        datetime.datetime.strptime(string_date, strp_string))
+                    break
                 except Exception as e:
                     pass
-        self.stats['pdf_text_start_date'] = min(
-            all_date_list) if all_date_list else self.stats['start_date']
-        self.stats['pdf_text_end_date'] = max(
-            all_date_list) if all_date_list else self.stats['end_date']
+        print all_date_list
+        if all_date_list and min(all_date_list) <= self.stats['start_date']:
+            self.stats['pdf_text_start_date'] = min(all_date_list)
+        else:
+            self.stats['pdf_text_start_date'] = self.stats['start_date']
+        if all_date_list and max(all_date_list) >= self.stats['end_date']:
+            self.stats['pdf_text_end_date'] = max(all_date_list)
+        else:
+            self.stats['pdf_text_end_date'] = self.stats['end_date']
+
         self.stats['days'] = (self.stats['pdf_text_end_date'] -
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
         balance = None
         try:
-            balance_string_list = re.findall(
-                r'(Opening Balance:(\s+)?\d+.\d{2})', self.pdf_text)[0]
-            for balance_string in balance_string_list:
-                balance = self.__get_amount(
-                    re.findall(r'\d+.\d{2}', balance_string)[0])
-                break
+            for data_list in self.raw_table_data.get('body', []):
+                if len(data_list) == 2 and "balance" in data_list[0].lower():
+                    balance = self.__get_amount(data_list[1])
+                    break
         except:
             pass
         if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
@@ -250,6 +266,6 @@ class CITIBankStatementsA(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'CITI Type A',
+            'bank_name': 'Canara Type A',
         }
         return data

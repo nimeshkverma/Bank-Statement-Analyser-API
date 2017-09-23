@@ -27,19 +27,6 @@ class CITIBankStatementsB(object):
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
-    def __is_date(self, input_string):
-        is_date = False
-        try:
-            datetime.datetime.strptime(input_string, '%d/%m/%Y')
-            is_date = True
-        except Exception as e:
-            try:
-                datetime.datetime.strptime(input_string, '%d/%m/%y')
-                is_date = True
-            except Exception as e:
-                pass
-        return is_date
-
     def __get_date(self, date_input):
         all_date_list = []
         all_string_date_list = re.findall(
