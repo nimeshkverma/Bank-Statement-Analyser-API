@@ -151,13 +151,6 @@ class YesBankStatementsA(object):
                 break
         except:
             pass
-        try:
-            for data_list in self.raw_table_data.get('body', []):
-                if len(data_list) == 2 and "balance" in data_list[0].lower():
-                    balance = self.__get_amount(data_list[1])
-                    break
-        except:
-            pass
         if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}
