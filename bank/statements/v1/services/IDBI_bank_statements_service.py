@@ -20,8 +20,9 @@ class IDBIBankStatements(object):
         self.pdf_text = pdf_text
         self.statements = []
         self.transactions = {}
-        self.__set_statements_and_transaction()
+        self.__set_statements()
         self.__set_positive_statement_gradient()
+        self.__set_transactions()
         self.stats = {}
         self.__set_pdf_text_stats()
         self.all_day_transactions = self.__get_all_day_transactions()
@@ -52,7 +53,7 @@ class IDBIBankStatements(object):
                     pass
         return all_date_list[0]
 
-    def __get_statement_set_transaction(self, data_list):
+    def __get_statement(self, data_list):
         statement_dict = {}
         try:
             statement_dict = {
@@ -69,17 +70,14 @@ class IDBIBankStatements(object):
                 statement_dict['transaction_type'] = 'deposit'
             else:
                 pass
-            if statement_dict:
-                self.transactions[statement_dict[
-                    'transaction_date']] = statement_dict['balance']
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
-    def __set_statements_and_transaction(self):
+    def __set_statements(self):
         for data_list in self.raw_table_data.get('body', []):
             if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
-                statement_dict = self.__get_statement_set_transaction(
+                statement_dict = self.__get_statement(
                     data_list)
                 self.statements.append(
                     statement_dict) if statement_dict else None
@@ -99,6 +97,11 @@ class IDBIBankStatements(object):
                 self.statements.reverse()
         except Exception as e:
             pass
+
+    def __set_transactions(self):
+        for statement in self.statements:
+            self.transactions[
+                statement['transaction_date']] = statement['balance']
 
     def __get_pdf_dates(self):
         from_to_string_date_list = re.findall(
