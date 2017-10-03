@@ -2,18 +2,19 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 4
-MAX_COLUMNS = 9
+MIN_COLUMNS = 3
+MAX_COLUMNS = 5
 
 
-HEADER = set(['Date', 'Type', 'Description', 'Debit', 'Credit'])
+HEADER = set(['Transaction', 'Cheque', 'Withdrawal', 'Deposit',
+              'Balance', 'Narration', 'Date', 'Number'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class IndusIndBankStatementsA(object):
-    """Class to analyse the data obtained from IndusInd Bank Type A"""
+class PunjabNationalBankStatementsA(object):
+    """Class to analyse the data obtained from Punjab National Bank Type A"""
 
     def __init__(self, raw_table_data, pdf_text):
         self.raw_table_data = raw_table_data
@@ -31,36 +32,58 @@ class IndusIndBankStatementsA(object):
     def __get_date(self, date_input):
         all_date_list = []
         all_string_date_list = re.findall(
-            r'([a-zA-Z]{3} \d{1,2}, \d{4})', date_input)
+            r'(\d{2}/\d{2}/\d{4})', date_input)
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%b %d, %Y'))
+                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
             except Exception as e:
                 pass
         return all_date_list[0]
 
     def __get_amount(self, input_string):
         raw_amount = input_string
-        for to_be_replaced in ['Cr', '(Dr', ',']:
+        for to_be_replaced in ['Cr.', ' ', ',', '*']:
             raw_amount = raw_amount.replace(to_be_replaced, '')
         try:
             return int(float(raw_amount))
         except Exception as e:
             return 0
 
+    def __get_balance(self, balance_input):
+        all_balance_list = []
+        all_string_balance_list = re.findall(
+            r'([0-9,]+\d{0,3}\.\d{2} Cr.)', balance_input)
+        for string_balance in all_string_balance_list:
+            try:
+                all_balance_list.append(self.__get_amount(string_balance))
+            except Exception as e:
+                pass
+        return all_balance_list[-1]
+
+    def __get_withdraw_deposit(self, withdraw_deposit_input):
+        all_withdraw_deposit_list = []
+        all_string_withdraw_deposit_list = re.findall(
+            r'([0-9,]+\d{0,3}\.\d{2})', withdraw_deposit_input)
+        for string_withdraw_deposit in all_string_withdraw_deposit_list:
+            try:
+                all_withdraw_deposit_list.append(
+                    self.__get_amount(string_withdraw_deposit))
+            except Exception as e:
+                pass
+        return all_withdraw_deposit_list[0] if all_withdraw_deposit_list else 0
+
     def __get_statement(self, data_list):
         statement_dict = {}
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[0]),
-                'description': ' '.join(data_list[1:-3]),
-                'withdraw': self.__get_amount(data_list[-3]),
-                'deposit': self.__get_amount(data_list[-2]),
-                'balance': self.__get_amount(data_list[-1]),
+                'description': ' '.join(data_list[1:]),
+                'withdraw_deposit': self.__get_withdraw_deposit('*'.join(data_list[1:])),
+                'balance': self.__get_balance('*'.join(data_list[1:])),
             })
         except Exception as e:
-            print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))
+            print "Following error occured while processing {data_list}:{error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
     def __set_statements(self):
@@ -97,9 +120,9 @@ class IndusIndBankStatementsA(object):
         pdf_dates = []
         try:
             from_to_string_date_list = re.findall(
-                r'(From(\s+):(\s+)[a-zA-Z]{3} \d{1,2}, \d{4}(\s+)?To(\s+)?:(\s+)[a-zA-Z]{3} \d{1,2}, \d{4})', self.pdf_text)[0]
+                r'(\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})', self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
-                for date_string in re.findall(r'([a-zA-Z]{3} \d{1,2}, \d{4})', from_to_string_date):
+                for date_string in re.findall(r'(\d{2}/\d{2}/\d{4})', from_to_string_date):
                     pdf_dates.append(date_string)
         except Exception as e:
             pass
@@ -111,7 +134,7 @@ class IndusIndBankStatementsA(object):
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            for strp_string in ['%b %d, %Y']:
+            for strp_string in ['%d/%m/%Y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))
@@ -269,6 +292,6 @@ class IndusIndBankStatementsA(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'IndusInd Type A',
+            'bank_name': 'Punjab National Bank Type A',
         }
         return data
