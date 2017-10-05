@@ -3,112 +3,86 @@ import datetime
 from copy import deepcopy
 
 MIN_COLUMNS = 4
-MAX_COLUMNS = 10
+MAX_COLUMNS = 4
 
-HEADER = set(['Srl', 'Txn Date', 'Value Date', 'Description',
-              'Cheque', 'CR/DR', 'CCY', 'Trxn Amount', 'Balance'])
+
+HEADER = set(['Date', 'Transaction Details',
+              'Withdrawals', 'Deposits', 'Balance'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25
 
 
-class IDBIBankStatements(object):
-    """Class to analyse the data obtained from IDBI Bank"""
+class CITIBankStatementsA(object):
+    """Class to analyse the data obtained from CITI Bank Type A"""
 
     def __init__(self, raw_table_data, pdf_text):
-        self.raw_table_data = deepcopy(raw_table_data)
+        self.raw_table_data = raw_table_data
         self.pdf_text = pdf_text
         self.statements = []
         self.transactions = {}
-        self.__set_statements()
-        self.__set_positive_statement_gradient()
-        self.__set_transactions()
+        self.__set_statements_and_transaction()
         self.stats = {}
         self.__set_pdf_text_stats()
         self.all_day_transactions = self.__get_all_day_transactions()
         self.__set_stats()
 
-    def __get_amount(self, input_string):
-        raw_amount = input_string
-        for to_be_replaced in ['(Cr)', '(Dr)', ',']:
-            raw_amount = raw_amount.replace(to_be_replaced, '')
-        try:
-            return int(float(raw_amount))
-        except Exception as e:
-            return 0
-
     def __get_date(self, date_input):
-        all_string_date_list = re.findall(
-            r'\d{2}/\d{2}/\d{2,4}', date_input)
         all_date_list = []
+        all_string_date_list = re.findall(r'(\d{2}/\d{2}/\d{2,4})', date_input)
         for string_date in all_string_date_list:
             try:
                 all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%y'))
+                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
             except Exception as e:
                 try:
                     all_date_list.append(
-                        datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                        datetime.datetime.strptime(string_date, '%d/%m/%y'))
                 except Exception as e:
                     pass
         return all_date_list[0]
 
-    def __get_statement(self, data_list):
+    def __get_amount(self, input_string):
+        comma_remove_input_string = input_string.replace(',', '')
+        try:
+            return int(float(comma_remove_input_string))
+        except Exception as e:
+            return 0
+
+    def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
-            statement_dict = {
-                'sr_no': data_list[0],
-                'transaction_date': self.__get_date(data_list[2]),
-                'narration': data_list[3],
-                'transaction_type': '',
+            statement_dict.update({
+                'transaction_date': self.__get_date(data_list[0]),
+                'transaction_details': str(data_list[1]),
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
-            }
-            if 'DR' in data_list[-3] or 'DR' in data_list[-4]:
-                statement_dict['transaction_type'] = 'withdraw'
-            elif 'CR' in data_list[-3] or 'CR' in data_list[-4]:
-                statement_dict['transaction_type'] = 'deposit'
-            else:
-                pass
+            })
+            if statement_dict:
+                self.transactions[statement_dict[
+                    'transaction_date']] = statement_dict['balance']
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
-    def __set_statements(self):
+    def __set_statements_and_transaction(self):
         for data_list in self.raw_table_data.get('body', []):
             if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
-                statement_dict = self.__get_statement(
+                statement_dict = self.__get_statement_set_transaction(
                     data_list)
                 self.statements.append(
                     statement_dict) if statement_dict else None
 
-    def __set_positive_statement_gradient(self):
-        positive_differences = 1
-        negitive_differences = 1
+    def __get_pdf_dates(self):
+        pdf_dates = []
         try:
-            previous_date = self.statements[0]['transaction_date']
-            for statement in self.statements[1:]:
-                if previous_date <= statement['transaction_date']:
-                    positive_differences += 1
-                else:
-                    negitive_differences += 1
-                previous_date = statement['transaction_date']
-            if negitive_differences > positive_differences:
-                self.statements.reverse()
+            from_to_string_date_list = re.findall(
+                r'(Statement Period:(\s+)?[a-zA-Z]{3,9} \d{2},\d{4} to [a-zA-Z]{3,9} \d{2},\d{4})', self.pdf_text)[0]
+            for from_to_string_date in from_to_string_date_list:
+                pdf_dates += re.findall(r'[a-zA-Z]{3,9} \d{2},\d{4}',
+                                        from_to_string_date)
         except Exception as e:
             pass
-
-    def __set_transactions(self):
-        for statement in self.statements:
-            self.transactions[
-                statement['transaction_date']] = statement['balance']
-
-    def __get_pdf_dates(self):
-        from_to_string_date_list = re.findall(
-            r'\d{2}/\d{2}/\d{2,4} [tT]o \d{2}/\d{2}/\d{2,4}', self.pdf_text)
-        pdf_dates = []
-        for string_date in from_to_string_date_list:
-            pdf_dates += string_date.upper().split(' TO ')
         return pdf_dates
 
     def __set_pdf_text_stats(self):
@@ -118,9 +92,14 @@ class IDBIBankStatements(object):
         all_date_list = []
         for string_date in all_string_date_list:
             try:
-                all_date_list.append(self.__get_date(string_date))
+                all_date_list.append(
+                    datetime.datetime.strptime(string_date, '%B %d,%Y'))
             except Exception as e:
-                pass
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, '%B %d,%y'))
+                except Exception as e:
+                    pass
         self.stats['pdf_text_start_date'] = min(
             all_date_list) if all_date_list else self.stats['start_date']
         self.stats['pdf_text_end_date'] = max(
@@ -129,24 +108,28 @@ class IDBIBankStatements(object):
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 
     def __get_first_day_balance(self):
-        opening_balance = None
-        opening_balance_statement = {}
-        for statement in self.statements:
-            if statement['transaction_date'] > self.stats['pdf_text_start_date']:
+        balance = None
+        try:
+            balance_string_list = re.findall(
+                r'(Opening Balance:(\s+)?\d+.\d{2})', self.pdf_text)[0]
+            for balance_string in balance_string_list:
+                balance = self.__get_amount(
+                    re.findall(r'\d+.\d{2}', balance_string)[0])
                 break
-            opening_balance_statement = statement
-        if opening_balance_statement:
-            opening_balance = opening_balance_statement['balance']
-        if opening_balance == None:
-            if self.statements[0].get('transaction_type') == 'withdraw':
-                opening_balance = self.statements[0].get(
-                    'balance', 0) + self.statements[0].get('withdraw_deposit', 0)
-            elif self.statements[0].get('transaction_type') == 'deposit':
-                opening_balance = self.statements[0].get(
-                    'balance', 0) - self.statements[0].get('withdraw_deposit', 0)
-            else:
-                opening_balance = self.statements[0].get('balance', 0)
-        return opening_balance
+        except:
+            pass
+        if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
+            opening_balance = None
+            opening_balance_statement = {}
+            for statement in self.statements:
+                if statement['transaction_date'] > self.stats['start_date']:
+                    break
+                opening_balance_statement = statement
+            if opening_balance_statement:
+                opening_balance = opening_balance_statement['balance']
+            if opening_balance != None:
+                balance = opening_balance
+        return balance if balance != None else self.statements[0]['balance']
 
     def __get_all_day_transactions(self):
         all_day_transactions = {}
@@ -212,9 +195,8 @@ class IDBIBankStatements(object):
             data = deepcopy(statement)
             for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdraw', 'deposit', 'balance', 'withdraw_deposit']:
-                if data.get(key):
-                    data[key] = str(data[key])
+            for key in ['withdraw_deposit', 'balance']:
+                data[key] = str(data[key])
             statements.append(data)
         return statements
 
@@ -268,6 +250,6 @@ class IDBIBankStatements(object):
             'stats': self.__json_stats(),
             'above_emi_balance_data': self.__json_days_above_given_balance(threshhold),
             'monthly_stats': self.__json_monthly_stats(threshhold),
-            'bank_name': 'IDBI',
+            'bank_name': 'CITI Type A',
         }
         return data
