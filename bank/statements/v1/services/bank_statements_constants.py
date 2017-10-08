@@ -777,5 +777,5 @@ BANK_IDENTIFIER_CONSTANTS = {
                 'weight': 1
             }
         ]
-    }
+    },
 }
