@@ -1,4 +1,4 @@
-BANK_IDENTIFIER_CONSTANTS = {
+BANK_IDENTIFIER_CONSTANTS_NEW = {
     'citi_a': {
         'keywords': [
             {
