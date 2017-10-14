@@ -1773,31 +1773,74 @@ LESS_PROMINENT_BANK_FEATURES = {
     'pnb_a': {
         'keywords': {
             'features': [
+                    {
+                        'string': 'account statement for account number',
+                        'weight': 1
+                    },
                 {
-                    'string': 'qawsedrftgyh123',
-                    'weight': 1
-                },
+                        'string': 'branch details',
+                        'weight': 1
+                        },
+                {
+                        'string': 'customer details',
+                        'weight': 1
+                        },
+                {
+                        'string': 'please ensure that all the cheque leaves in your custody are duly branded',
+                        'weight': 1
+                        },
+                {
+                        'string': 'customers are requested in their own interest not to issue cheques without',
+                        'weight': 1
+                        },
+                {
+                        'string': 'please maintain minimum average balance',
+                        'weight': 1
+                        },
+                {
+                        'string': 'to avoid levy of charges',
+                        'weight': 1
+                        },
+                {
+                        'string': 'pls note penal interest may be charged in loan accounts due to financial reasons',
+                        'weight': 1
+                        },
+                {
+                        'string': 'quarterly average balances',
+                        'weight': 1
+                        },
+                {
+                        'string': 'ledger folio charges',
+                        'weight': 1
+                        },
+                {
+                        'string': 'point of sale',
+                        'weight': 1
+                        },
             ],
             'weight': 4
         },
         'regex_words': {
-            'features':  [
+            'features': [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'([0-9,]+\d{0,3}\.\d{2} [C|D]r.)',
                     'weight': 1
                 },
-
+                {
+                    'string': r'(\d{2}[/|-][a-zA-Z0-9]{2,3}[/|-]\d{4}(\s+)?to(\s+)?\d{2}[/|-][a-zA-Z0-9]{2,3}[/|-]\d{4})',
+                    'weight': 1
+                },
             ],
             'weight': 3
         },
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 3,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 5,
                     'weight': 1
                 }
             ],
@@ -1806,9 +1849,37 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'date',
                     'weight': 1
                 },
+                {
+                    'string': 'narration',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawal',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+                {
+                    'string': 'transaction',
+                    'weight': 1
+                },
+                {
+                    'string': 'number',
+                    'weight': 1
+                }
             ],
             'weight': 2
         }
@@ -1817,7 +1888,35 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'account statement through internet banking',
+                    'weight': 1
+                },
+                {
+                    'string': 'account name',
+                    'weight': 1
+                },
+                {
+                    'string': 'addressline1',
+                    'weight': 1
+                },
+                {
+                    'string': 'addressline2',
+                    'weight': 1
+                },
+                {
+                    'string': 'bank id',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch id',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch name',
+                    'weight': 1
+                },
+                {
+                    'string': 'full statement',
                     'weight': 1
                 },
             ],
@@ -1826,21 +1925,20 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(Date ranging from(\s+)?\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})',
                     'weight': 1
                 },
-
             ],
             'weight': 3
         },
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 7,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 8,
                     'weight': 1
                 }
             ],
@@ -1849,7 +1947,43 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'tran id',
+                    'weight': 1
+                },
+                {
+                    'string': 'txn date',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque no',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'currency',
+                    'weight': 1
+                },
+                {
+                    'string': 'cr/dr',
+                    'weight': 1
+                },
+                {
+                    'string': 'amount',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+                {
+                    'string': 'personal details',
+                    'weight': 1
+                },
+                {
+                    'string': 'account details',
                     'weight': 1
                 },
             ],
@@ -1860,7 +1994,51 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'indian bank',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch code',
+                    'weight': 1
+                },
+                {
+                    'string': 'account number :',
+                    'weight': 1
+                },
+                {
+                    'string': 'product type :',
+                    'weight': 1
+                },
+                {
+                    'string': 'email :',
+                    'weight': 1
+                },
+                {
+                    'string': 'statement date :',
+                    'weight': 1
+                },
+                {
+                    'string': 'cleared balance :',
+                    'weight': 1
+                },
+                {
+                    'string': 'uncleared amount :',
+                    'weight': 1
+                },
+                {
+                    'string': 'drawing power :',
+                    'weight': 1
+                },
+                {
+                    'string': 'interest rate :',
+                    'weight': 1
+                },
+                {
+                    'string': 'statement downloaded by',
+                    'weight': 1
+                },
+                {
+                    'string': 'end of statement - from internet banking',
                     'weight': 1
                 },
             ],
@@ -1869,9 +2047,14 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(statement of account from(\s+)?\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})',
                     'weight': 1
                 },
+                {
+                    'string': r'(for account number(\s+)?\d+)',
+                    'weight': 1
+                },
+
 
             ],
             'weight': 3
@@ -1879,11 +2062,11 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 4,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 6,
                     'weight': 1
                 }
             ],
@@ -1892,7 +2075,47 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'value',
+                    'weight': 1
+                },
+                {
+                    'string': 'post date',
+                    'weight': 1
+                },
+                {
+                    'string': 'remitter',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch',
+                    'weight': 1
+                },
+                {
+                    'string': 'dr',
+                    'weight': 1
+                },
+                {
+                    'string': 'cr',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+                {
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance b/f',
                     'weight': 1
                 },
             ],
@@ -1903,7 +2126,31 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'name',
+                    'weight': 1
+                },
+                {
+                    'string': 'address',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch address',
+                    'weight': 1
+                },
+                {
+                    'string': 'ifsc code',
+                    'weight': 1
+                },
+                {
+                    'string': 'opening balance',
+                    'weight': 1
+                },
+                {
+                    'string': 'note: this is a system generated report need not to be signed.',
                     'weight': 1
                 },
             ],
@@ -1912,21 +2159,24 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(andb\d{7})',
                     'weight': 1
                 },
-
+                {
+                    'string': r'(Account Statement of(\s+)?\d*(\s+)?from(\s+)?\d{2}-\d{2}-\d{4}(\s+)?to(\s+)?\d{2}-\d{2}-\d{4})',
+                    'weight': 1
+                }
             ],
             'weight': 3
         },
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 3,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 4,
                     'weight': 1
                 }
             ],
@@ -1935,7 +2185,23 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawal',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
                     'weight': 1
                 },
             ],
@@ -1946,7 +2212,23 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'account name',
+                    'weight': 1
+                },
+                {
+                    'string': 'address1',
+                    'weight': 1
+                },
+                {
+                    'string': 'pin code',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch code',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch city ',
                     'weight': 1
                 },
             ],
@@ -1955,21 +2237,28 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(Statement of account(\s+)?\d*(\s+)?for the period of(\s+)?\d{2}/\d{2}/\d{2}(\s+)?to(\s+)?\d{2}/\d{2}/\d{2})',
                     'weight': 1
                 },
-
+                {
+                    'string': r'(branch ifsc(\s+)?:(\s+)?andb\d{7})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(branch micr(\s+)?:(\s+)?\d{3}011\d{3})',
+                    'weight': 1
+                },
             ],
             'weight': 3
         },
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 4,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 5,
                     'weight': 1
                 }
             ],
@@ -1978,9 +2267,37 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'tran',
                     'weight': 1
                 },
+                {
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque no',
+                    'weight': 1
+                },
+                {
+                    'string': 'transaction',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawals(rs.)',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposits (rs.)',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance (rs.)',
+                    'weight': 1
+                }
             ],
             'weight': 2
         }
@@ -1989,7 +2306,51 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'statement of accounts',
+                    'weight': 1
+                },
+                {
+                    'string': 'address',
+                    'weight': 1
+                },
+                {
+                    'string': 'pin code',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch address',
+                    'weight': 1
+                },
+                {
+                    'string': 'currency',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch :',
+                    'weight': 1
+                },
+                {
+                    'string': 'account total',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch total',
+                    'weight': 1
+                },
+                {
+                    'string': 'grand total',
+                    'weight': 1
+                },
+                {
+                    'string': 'some of the transactions pending for updation are not shown in this statement. to know the exact balance, you can do the balance enquiry.',
+                    'weight': 1
+                },
+                {
+                    'string': 'this report is generated from the data available at web centre.',
+                    'weight': 1
+                },
+                {
+                    'string': 'please contact the web centre / branch if there is any discrepancy in the report.',
                     'weight': 1
                 },
             ],
@@ -1998,21 +2359,24 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(From Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4}(\s+)?To Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4})',
                     'weight': 1
                 },
-
+                {
+                    'string': r'(ifsc code(\s+)?:(\s+)?corp\d{7})',
+                    'weight': 1
+                },
             ],
             'weight': 3
         },
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 5,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 6,
                     'weight': 1
                 }
             ],
@@ -2021,7 +2385,31 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'txn. date',
+                    'weight': 1
+                },
+                {
+                    'string': 'particulars',
+                    'weight': 1
+                },
+                {
+                    'string': 'chq no.',
+                    'weight': 1
+                },
+                {
+                    'string': 'txn.type',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawal',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
                     'weight': 1
                 },
             ],
@@ -2032,7 +2420,39 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'account statement for account number',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch details',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch details',
+                    'weight': 1
+                },
+                {
+                    'string': 'bank address',
+                    'weight': 1
+                },
+                {
+                    'string': 'acc. statement date',
+                    'weight': 1
+                },
+                {
+                    'string': 'customer details',
+                    'weight': 1
+                },
+                {
+                    'string': 'customer name ',
+                    'weight': 1
+                },
+                {
+                    'string': 'oriental bank of commerce',
+                    'weight': 1
+                },
+                {
+                    'string': 'nominee',
                     'weight': 1
                 },
             ],
@@ -2041,21 +2461,24 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(Statement Period(\s+)?:(\s+)?From Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4}(\s+)?To Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4})',
                     'weight': 1
                 },
-
+                {
+                    'string': r'(ifsc code(\s+)?:(\s+)?orbc\d{7})',
+                    'weight': 1
+                },
             ],
             'weight': 3
         },
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 6,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 7,
                     'weight': 1
                 }
             ],
@@ -2064,7 +2487,47 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'sl.',
+                    'weight': 1
+                },
+                {
+                    'string': 'transaction',
+                    'weight': 1
+                },
+                {
+                    'string': 'value date',
+                    'weight': 1
+                },
+                {
+                    'string': 'instrument',
+                    'weight': 1
+                },
+                {
+                    'string': 'account',
+                    'weight': 1
+                },
+                {
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'narration',
+                    'weight': 1
+                },
+                {
+                    'string': 'debit',
+                    'weight': 1
+                },
+                {
+                    'string': 'credit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+                {
+                    'string': 'remarks',
                     'weight': 1
                 },
             ],
@@ -2075,7 +2538,27 @@ LESS_PROMINENT_BANK_FEATURES = {
         'keywords': {
             'features': [
                 {
-                    'string': 'qawsedrftgyh123',
+                    'string': 'denotes cancelled transaction',
+                    'weight': 1
+                },
+                {
+                    'string': 'email id',
+                    'weight': 1
+                },
+                {
+                    'string': 'customer id',
+                    'weight': 1
+                },
+                {
+                    'string': 'open dt',
+                    'weight': 1
+                },
+                {
+                    'string': 'status',
+                    'weight': 1
+                },
+                {
+                    'string': 'address',
                     'weight': 1
                 },
             ],
@@ -2084,7 +2567,15 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features':  [
                 {
-                    'string': r'(dcbsdscbcdgsjhcn 09983)',
+                    'string': r'(Statement for the period from(\s+)?\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(ifsc(\s+)?code(\s+)?[:|-](\s+)?ioba\d{7})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(micr(\s+)?code(\s+)?[:|-](\s+)?\d{3}020\d{3})',
                     'weight': 1
                 },
 
@@ -2094,11 +2585,11 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 0,
+                    'minimum_columns': 5,
                     'weight': 1
                 },
                 {
-                    'maximum_columns': 0,
+                    'maximum_columns': 5,
                     'weight': 1
                 }
             ],
@@ -2107,7 +2598,35 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_headers': {
             'features': [
                 {
-                    'string': 'iohd932y32ubjnkmsxa',
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'chq',
+                    'weight': 1
+                },
+                {
+                    'string': 'naration',
+                    'weight': 1
+                },
+                {
+                    'string': 'cod',
+                    'weight': 1
+                },
+                {
+                    'string': 'debit',
+                    'weight': 1
+                },
+                {
+                    'string': 'credit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+                {
+                    'string': 'no',
                     'weight': 1
                 },
             ],
