@@ -1,6 +1,7 @@
 import re
 import unicodedata
 import math
+import copy
 
 from ICICI_bank_statements_a_service import ICICIBankStatementsA
 from ICICI_bank_statements_b_service import ICICIBankStatementsB
@@ -13,17 +14,30 @@ from Kotak_bank_statements_b_service import KotakBankStatementsB
 from Kotak_bank_statements_c_service import KotakBankStatementsC
 from IDBI_bank_statements_service import IDBIBankStatements
 from IDFC_bank_statements_service import IDFCBankStatements
-# from CITI_bank_statements_a_service import CITIBankStatementsA
-# from CITI_bank_statements_b_service import CITIBankStatementsB
-# from Canara_bank_statements_a_service import CanaraBankStatementsA
-# from Canara_bank_statements_b_service import CanaraBankStatementsB
+from Andra_bank_statements_a_service import AndraBankStatementsA
+from Andra_bank_statements_b_service import AndraBankStatementsB
+from Bank_of_Baroda_bank_statements_a_service import BankOfBarodaBankStatementsA
+from CITI_bank_statements_a_service import CITIBankStatementsA
+from CITI_bank_statements_b_service import CITIBankStatementsB
+from Canara_bank_statements_a_service import CanaraBankStatementsA
+from Canara_bank_statements_b_service import CanaraBankStatementsB
+from Corporation_bank_statements_a_service import CorporationBankStatementsA
+from IndianOverseas_bank_statements_service import IndianOverseasStatementsA
+from Indian_bank_statements_a_service import IndianBankStatementsA
+from IndusInd_bank_statements_a_service import IndusIndBankStatementsA
+from IndusInd_bank_statements_b_service import IndusIndBankStatementsB
+from OrientalBankOfCommerce_bank_statements_b_service import OrientalBankOfCommerceBankStatementsA
+from PunjabNational_bank_statements_a_service import PunjabNationalBankStatementsA
+from Union_bank_statements_a_service import UnionBankStatementsA
+from Yes_bank_statements_a_service import YesBankStatementsA
 
 from bank_identifier_constants import (PROMINENT_BANK_LIST, PROMINENT_BANK_FEATURES,
                                        TABLE_ROW_MINIMUM_COVERAGE, PROMINENT_BANK_LIST,
-                                       PROMINENT_BANK_MINIMUM_SCORE)
+                                       PROMINENT_BANK_MINIMUM_SCORE, LESS_PROMINENT_BANK_FEATURES,
+                                       LESS_PROMINENT_BANK_LIST, LESS_PROMINENT_BANK_MAX_CONSIDERATION)
 
 
-class ProminentBankIdentifier(object):
+class BankIdentifier(object):
     """Class to Identify the prominent banks from the Bank Statements"""
 
     def __init__(self, raw_table_data, pdf_text):
@@ -32,95 +46,194 @@ class ProminentBankIdentifier(object):
         self.processed_pdf_text = self.__processed_pdf_text()
         self.raw_table_data_set = self.__raw_table_data_set()
         self.row_lenth_distribution = self.__row_lenth_distribution()
+        self.bank_features = self.__bank_features()
         self.bank_dict = {
             'icici_b': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': ICICIBankStatementsA,
             },
             'icici_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': ICICIBankStatementsB,
             },
             'axis_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': AXISBankStatementsA,
             },
             'axis_b': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': AXISBankStatementsB,
             },
             'idbi_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': IDBIBankStatements,
             },
             'idbi_b': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': IDBIBankStatements,
             },
             'idfc_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': IDFCBankStatements,
             },
             'sbi_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': SBIBankStatements,
             },
             'hdfc_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': HDFCBankStatements,
             },
             'kotak_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': KotakBankStatementsA,
             },
             'kotak_b': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': KotakBankStatementsB,
             },
             'kotak_c': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
-                'class': KotakBankStatementsC,
+            },
+            'city_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'city_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'canara_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'canara_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'baroda_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'yes_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'indusind_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'indusind_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'pnb_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'union_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'indian_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'andra_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'andra_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'corporation_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'oriental_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'overseas_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
             },
         }
-        self.score_map = dict()
+        self.score = dict()
         self.__get_likelihood()
-        self.bank_list = self.__bank_list()
+        self.score_map = self.__invert_dictionary(self.score)
+        self.prominent_bank_list = self.__prominent_bank_list()
+        self.less_prominent_bank_list = self.__less_prominent_bank_list()
+
+    def __bank_features(self):
+        all_bank = copy.deepcopy(PROMINENT_BANK_FEATURES)
+        all_bank.update(LESS_PROMINENT_BANK_FEATURES)
+        return all_bank
+
+    def __invert_dictionary(self, input_dict):
+        output_dict = {}
+        for key in input_dict:
+            value = input_dict.get(key)
+            output_dict.setdefault(value, []).append(key)
+        return output_dict
 
     def __processed_pdf_text(self):
         pdf_text_unicode = unicode(self.pdf_text, "utf-8")
@@ -163,7 +276,7 @@ class ProminentBankIdentifier(object):
 
     def __get_score(self, metric, bank):
         if metric == 'table_dimensions':
-            minimum_rows_data, maximum_rows_data = PROMINENT_BANK_FEATURES.get(
+            minimum_rows_data, maximum_rows_data = self.bank_features.get(
                 bank, {}).get(metric, {}).get('features', [{}, {}])
             if self.__table_dimensions_bool(minimum_rows_data['minimum_columns'], maximum_rows_data['maximum_columns']):
                 return 100.0
@@ -172,7 +285,7 @@ class ProminentBankIdentifier(object):
         normalized_score = None
         total_score = 0
         total_weight = 0
-        for keyword_data in PROMINENT_BANK_FEATURES.get(bank, {}).get(metric, {}).get('features', []):
+        for keyword_data in self.bank_features.get(bank, {}).get(metric, {}).get('features', []):
             total_weight += keyword_data['weight']
             if metric == 'keywords':
                 if keyword_data['string'] in self.processed_pdf_text:
@@ -185,7 +298,7 @@ class ProminentBankIdentifier(object):
                     total_score += keyword_data['weight']
             else:
                 pass
-        if PROMINENT_BANK_FEATURES.get(bank, {}).get(metric, {}).get('features'):
+        if self.bank_features.get(bank, {}).get(metric, {}).get('features'):
             if total_weight:
                 normalized_score = total_score * 100.0 / total_weight
             else:
@@ -193,22 +306,40 @@ class ProminentBankIdentifier(object):
         return normalized_score
 
     def __get_likelihood(self):
-        for bank in PROMINENT_BANK_LIST:
+        for bank in PROMINENT_BANK_LIST + LESS_PROMINENT_BANK_LIST:
             total_score = 0
             total_weight = 0
             for metric in ['keywords', 'regex_words', 'table_headers', 'table_dimensions']:
                 self.bank_dict[bank][metric] = self.__get_score(metric, bank)
                 if self.bank_dict[bank][metric] is not None:
-                    total_weight += PROMINENT_BANK_FEATURES.get(
+                    total_weight += self.bank_features.get(
                         bank, {}).get(metric, {}).get('weight', 0)
-                    total_score += self.bank_dict[bank][metric] * 1.0 * PROMINENT_BANK_FEATURES.get(
+                    total_score += self.bank_dict[bank][metric] * 1.0 * self.bank_features.get(
                         bank, {}).get(metric, {}).get('weight', 0)
-            self.score_map[bank] = math.ceil(
+            self.score[bank] = math.ceil(
                 total_score * 1.0 / total_weight) if total_weight else 0
 
-    def __bank_list(self):
+    def __prominent_bank_list(self):
         bank_list = []
         for bank in PROMINENT_BANK_LIST:
-            if self.score_map[bank] >= PROMINENT_BANK_MINIMUM_SCORE:
+            print bank, self.score[bank], 11
+            if self.score[bank] >= PROMINENT_BANK_MINIMUM_SCORE:
                 bank_list.append(bank)
         return bank_list
+
+    def __less_prominent_bank_list(self):
+        bank_list = []
+        print self.score_map
+        score_list = self.score_map.keys()
+        print score_list
+        score_list.sort()
+        score_list.reverse()
+        print score_list
+        for score in score_list:
+            print score, 9090
+            for bank in self.score_map[score]:
+                print bank, 88
+                if bank in LESS_PROMINENT_BANK_LIST:
+                    bank_list.append(bank)
+                    print bank, score, 22
+        return bank_list[:LESS_PROMINENT_BANK_MAX_CONSIDERATION]

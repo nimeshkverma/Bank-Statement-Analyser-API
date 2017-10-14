@@ -92,7 +92,7 @@ class YesBankStatementsA(object):
                 self.transactions[statement_dict[
                     'transaction_date']] = statement_dict['balance']
         except Exception as e:
-        print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))
+            print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
     def __set_statements_and_transaction(self):

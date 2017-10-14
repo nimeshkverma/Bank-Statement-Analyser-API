@@ -35,7 +35,16 @@ class KotakBankStatementsC(object):
             return 0
 
     def __get_date(self, date_input):
-        return datetime.datetime.strptime(date_input, '%d/%m/%Y')
+        all_date_list = []
+        all_string_date_list = re.findall(
+            r'(\d{2}/\d{2}/\d{4})', date_input)
+        for string_date in all_string_date_list:
+            try:
+                all_date_list.append(
+                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+            except Exception as e:
+                pass
+        return all_date_list[-1]
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}

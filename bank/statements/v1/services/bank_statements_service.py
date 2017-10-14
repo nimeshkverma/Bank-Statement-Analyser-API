@@ -18,7 +18,7 @@ from tabula import read_pdf
 from django.conf import settings
 
 import re
-from bank_identifier_service import ProminentBankIdentifier
+from bank_identifier_service import BankIdentifier
 from ICICI_bank_statements_a_service import ICICIBankStatementsA
 from ICICI_bank_statements_b_service import ICICIBankStatementsB
 from HDFC_bank_statements_service import HDFCBankStatements
@@ -30,12 +30,22 @@ from Kotak_bank_statements_b_service import KotakBankStatementsB
 from Kotak_bank_statements_c_service import KotakBankStatementsC
 from IDBI_bank_statements_service import IDBIBankStatements
 from IDFC_bank_statements_service import IDFCBankStatements
+from Andra_bank_statements_a_service import AndraBankStatementsA
+from Andra_bank_statements_b_service import AndraBankStatementsB
+from Bank_of_Baroda_bank_statements_a_service import BankOfBarodaBankStatementsA
 from CITI_bank_statements_a_service import CITIBankStatementsA
 from CITI_bank_statements_b_service import CITIBankStatementsB
 from Canara_bank_statements_a_service import CanaraBankStatementsA
 from Canara_bank_statements_b_service import CanaraBankStatementsB
-
-# from bank_statements_constants import BANK_IDENTIFIER_CONSTANTS
+from Corporation_bank_statements_a_service import CorporationBankStatementsA
+from IndianOverseas_bank_statements_service import IndianOverseasStatementsA
+from Indian_bank_statements_a_service import IndianBankStatementsA
+from IndusInd_bank_statements_a_service import IndusIndBankStatementsA
+from IndusInd_bank_statements_b_service import IndusIndBankStatementsB
+from OrientalBankOfCommerce_bank_statements_b_service import OrientalBankOfCommerceBankStatementsA
+from PunjabNational_bank_statements_a_service import PunjabNationalBankStatementsA
+from Union_bank_statements_a_service import UnionBankStatementsA
+from Yes_bank_statements_a_service import YesBankStatementsA
 
 from database_service import Database
 from email_service import send_mail
@@ -158,178 +168,6 @@ class BankStatementsRawData(object):
         return text
 
 
-# class BankIdentifier(object):
-#     """Class for determinsation of Specific Bank from the Bank Statements"""
-
-#     def __init__(self, raw_table_data, pdf_text):
-#         self.raw_table_data = raw_table_data
-#         self.pdf_text = pdf_text
-#         self.processed_pdf_text = ' '.join(self.pdf_text.lower().split())
-#         self.raw_table_data_set = self.__raw_table_data_set()
-#         self.bank_dict = {
-#             'icici_b': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': ICICIBankStatementsA,
-#             },
-#             'icici_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': ICICIBankStatementsB,
-#             },
-#             'axis_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': AXISBankStatementsA,
-#             },
-#             'axis_b': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': AXISBankStatementsB,
-#             },
-#             'idbi_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': IDBIBankStatements,
-#             },
-#             'idbi_b': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': IDBIBankStatements,
-#             },
-#             'idfc_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': IDFCBankStatements,
-#             },
-#             'sbi_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': SBIBankStatements,
-#             },
-#             'hdfc_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': HDFCBankStatements,
-#             },
-#             'kotak_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': KotakBankStatementsA,
-#             },
-#             'kotak_b': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': KotakBankStatementsB,
-#             },
-#             'kotak_c': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': KotakBankStatementsC,
-#             },
-#             'citi_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': CITIBankStatementsA,
-#             },
-#             'citi_b': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': CITIBankStatementsB,
-#             },
-#             'canara_a': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': CanaraBankStatementsA,
-#             },
-#             'canara_b': {
-#                 'keywords': None,
-#                 'regex_words': None,
-#                 'table_headers': None,
-#                 'class': CanaraBankStatementsB,
-#             },
-#         }
-#         self.priority_1_banks = ['icici_a', 'icici_b', 'hdfc_a', 'axis_a', 'axis_b',
-#                                  'sbi_a', 'kotak_a', 'kotak_b', 'kotak_c', 'idbi_a', 'idbi_b', 'idfc_a', ]
-#         self.priority_2_banks = ['citi_a', 'citi_b', 'canara_a', 'canara_b']
-#         self.score_map = dict()
-#         self.__get_likelihood()
-#         self.bank_list = self.__bank_list()
-#         print self.bank_list, self.score_map
-
-#     def __raw_table_data_set(self):
-#         raw_table_data_set = set()
-#         for statement in self.raw_table_data['body'] + self.raw_table_data['headers']:
-#             for string in statement:
-#                 raw_table_data_set.add(string.lower())
-#         return raw_table_data_set
-
-#     def __dimention_string_postive(self, dimention, dimention_string):
-#         dimention_string_postive = False
-#         if dimention == 'keywords':
-#             if dimention_string in self.processed_pdf_text:
-#                 dimention_string_postive = True
-#         elif dimention == 'regex_words':
-#             if re.findall(dimention_string, self.processed_pdf_text):
-#                 dimention_string_postive = True
-#         elif dimention == 'table_headers':
-#             if dimention_string in self.raw_table_data_set:
-#                 dimention_string_postive = True
-#         else:
-#             pass
-#         return dimention_string_postive
-
-#     def __get_likelihood(self):
-#         for bank_type, bank_score_dimention_dict in self.bank_dict.iteritems():
-#             for dimention in ['keywords', 'regex_words', 'table_headers']:
-#                 dimention_score = 0.0
-#                 total_weight = 0.0
-#                 for bank_dimention_score_data in BANK_IDENTIFIER_CONSTANTS[bank_type][dimention]:
-#                     total_weight += bank_dimention_score_data['weight']
-#                     if self.__dimention_string_postive(dimention, bank_dimention_score_data['string']):
-#                         dimention_score += bank_dimention_score_data['weight']
-#                 if BANK_IDENTIFIER_CONSTANTS[bank_type][dimention] and total_weight:
-#                     self.bank_dict[bank_type][
-#                         dimention] = dimention_score * 100.0 / total_weight
-#             bank_score = 0.0
-#             dimentions_considered = 0.0
-#             for dimention in ['keywords', 'regex_words', 'table_headers']:
-#                 if self.bank_dict[bank_type][dimention] != None:
-#                     dimentions_considered += 1
-#                     bank_score += self.bank_dict[bank_type][dimention]
-#             if dimentions_considered:
-#                 bank_score = bank_score / dimentions_considered
-#             self.bank_dict[bank_type]['score'] = bank_score
-#             if bank_score in self.score_map.keys():
-#                 self.score_map[bank_score].append(bank_type)
-#             else:
-#                 self.score_map[bank_score] = [bank_type]
-
-#     def __bank_list(self):
-#         bank_list = []
-#         scores = self.score_map.keys()
-#         scores.sort()
-#         scores.reverse()
-#         for score in scores:
-#             bank_list += self.score_map[score]
-#         return bank_list
-
-
 class BankStatements(object):
     """Class for determinsation of Specific Bank from the Bank Statements"""
 
@@ -340,7 +178,7 @@ class BankStatements(object):
             self.pdf_path, self.password)
         self.raw_table_data = self.bank_statememt_raw_data.raw_table_data
         self.pdf_text = self.bank_statememt_raw_data.pdf_text
-        self.bank_identifier = ProminentBankIdentifier(
+        self.bank_identifier = BankIdentifier(
             self.raw_table_data, self.pdf_text)
         self.bank_dict = {
             'icici_a': {
@@ -403,11 +241,13 @@ class BankStatements(object):
 
     def __get_specific_bank(self):
         specific_bank = None
-        for bank_name in self.bank_identifier.bank_list:
+        for bank_name in self.bank_identifier.prominent_bank_list + self.bank_identifier.less_prominent_bank_list:
             try:
+                print bank_name
                 specific_bank = self.bank_dict[bank_name][
                     'class'](self.raw_table_data, self.pdf_text)
                 self.bank_name = bank_name
+                print bank_name
                 break
             except Exception as e:
                 pass
