@@ -48,13 +48,19 @@ class BankIdentifier(object):
         self.row_lenth_distribution = self.__row_lenth_distribution()
         self.bank_features = self.__bank_features()
         self.bank_dict = {
+            'icici_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
             'icici_b': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
             },
-            'icici_a': {
+            'hdfc_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
@@ -72,31 +78,7 @@ class BankIdentifier(object):
                 'table_headers': None,
                 'table_dimensions': None,
             },
-            'idbi_a': {
-                'keywords': None,
-                'regex_words': None,
-                'table_headers': None,
-                'table_dimensions': None,
-            },
-            'idbi_b': {
-                'keywords': None,
-                'regex_words': None,
-                'table_headers': None,
-                'table_dimensions': None,
-            },
-            'idfc_a': {
-                'keywords': None,
-                'regex_words': None,
-                'table_headers': None,
-                'table_dimensions': None,
-            },
             'sbi_a': {
-                'keywords': None,
-                'regex_words': None,
-                'table_headers': None,
-                'table_dimensions': None,
-            },
-            'hdfc_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
@@ -120,13 +102,31 @@ class BankIdentifier(object):
                 'table_headers': None,
                 'table_dimensions': None,
             },
-            'city_a': {
+            'idbi_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
             },
-            'city_b': {
+            'idbi_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'idfc_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'citi_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'citi_b': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
@@ -144,13 +144,13 @@ class BankIdentifier(object):
                 'table_headers': None,
                 'table_dimensions': None,
             },
-            'baroda_a': {
+            'yes_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,
                 'table_dimensions': None,
             },
-            'yes_a': {
+            'baroda_a': {
                 'keywords': None,
                 'regex_words': None,
                 'table_headers': None,

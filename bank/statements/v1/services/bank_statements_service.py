@@ -229,6 +229,42 @@ class BankStatements(object):
             'canara_b': {
                 'class': CanaraBankStatementsB,
             },
+            'yes_a': {
+                'class': YesBankStatementsA,
+            },
+            'baroda_a': {
+                'class': BankOfBarodaBankStatementsA,
+            },
+            'indusind_a': {
+                'class': IndusIndBankStatementsA,
+            },
+            'indusind_b': {
+                'class': IndusIndBankStatementsB,
+            },
+            'pnb_a': {
+                'class': PunjabNationalBankStatementsA,
+            },
+            'union_a': {
+                'class': UnionBankStatementsA,
+            },
+            'indian_a': {
+                'class': IndianBankStatementsA,
+            },
+            'andra_a': {
+                'class': AndraBankStatementsA,
+            },
+            'andra_b': {
+                'class': AndraBankStatementsB,
+            },
+            'corporation_a': {
+                'class': CorporationBankStatementsA,
+            },
+            'oriental_a': {
+                'class': OrientalBankOfCommerceBankStatementsA,
+            },
+            'overseas_a': {
+                'class': IndianOverseasStatementsA,
+            },
         }
         self.bank_name = None
         self.specific_bank = self.__get_specific_bank()
@@ -346,6 +382,7 @@ class BankStatementsAnalyser(object):
             'loan_details': self.loan_details,
         }
         if self.bank_statements and self.bank_statements.specific_bank:
+            print self.bank_statements.specific_bank, 100010101
             data['bank_name'] = self.bank_statements.bank_name
             data.update(self.bank_statements.specific_bank.data_json(
                 self.loan_details.get('loan_emi', 0)))

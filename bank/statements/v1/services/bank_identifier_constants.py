@@ -1,7 +1,7 @@
 PROMINENT_BANK_LIST = ['idfc_a', 'idbi_a', 'idbi_b', 'kotak_c', 'kotak_b',
                        'kotak_a', 'icici_a', 'hdfc_a', 'axis_a', 'axis_b', 'sbi_a', 'icici_b', ]
 
-LESS_PROMINENT_BANK_LIST = ['city_a', 'city_b', 'canara_a', 'canara_b',
+LESS_PROMINENT_BANK_LIST = ['citi_a', 'citi_b', 'canara_a', 'canara_b',
                             'yes_a', 'baroda_a', 'indusind_a', 'indusind_b',
                             'pnb_a', 'union_a', 'indian_a', 'andra_a', 'andra_b',
                             'corporation_a', 'oriental_a', 'overseas_a']
@@ -982,7 +982,7 @@ PROMINENT_BANK_FEATURES = {
 }
 
 LESS_PROMINENT_BANK_FEATURES = {
-    'city_a': {
+    'citi_a': {
         'keywords': {
             'features': [
                 {
@@ -1072,7 +1072,7 @@ LESS_PROMINENT_BANK_FEATURES = {
             'weight': 2
         }
     },
-    'city_b': {
+    'citi_b': {
         'keywords': {
             'features': [
                 {
