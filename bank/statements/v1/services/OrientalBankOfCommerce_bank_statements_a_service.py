@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 6
+MIN_COLUMNS = 5
 MAX_COLUMNS = 7
 
 
@@ -31,14 +31,16 @@ class OrientalBankOfCommerceBankStatementsA(object):
 
     def __get_date(self, date_input):
         all_date_list = []
-        all_string_date_list = re.findall(
-            r'(\d{2}/\d{2}/\d{4})', date_input)
+        all_string_date_list = []
+        for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}.\d{2}.\d{2})']:
+            all_string_date_list += re.findall(date_regex, date_input)
         for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
-            except Exception as e:
-                pass
+            for strp_string in ['%d/%m/%Y', '%d/%m/%y', '%m.%d.%y']:
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, strp_string))
+                except Exception as e:
+                    pass
         return all_date_list[0]
 
     def __get_amount(self, input_string):
@@ -55,9 +57,9 @@ class OrientalBankOfCommerceBankStatementsA(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[2]),
-                'description': ' '.join(data_list[3]),
-                'withdraw_deposit': self.__get_amount(data_list[4]),
-                'balance': self.__get_amount(data_list[5]),
+                'description': ' '.join(data_list[3:-2]),
+                'withdraw_deposit': self.__get_amount(data_list[-2]),
+                'balance': self.__get_amount(data_list[-1]),
             })
         except Exception as e:
             print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))

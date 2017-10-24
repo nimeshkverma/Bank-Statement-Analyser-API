@@ -2474,7 +2474,7 @@ LESS_PROMINENT_BANK_FEATURES = {
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 6,
+                    'minimum_columns': 5,
                     'weight': 1
                 },
                 {
