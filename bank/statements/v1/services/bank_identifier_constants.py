@@ -1541,7 +1541,7 @@ LESS_PROMINENT_BANK_FEATURES = {
         'regex_words': {
             'features': [
                 {
-                    'string': r'(From(\s+)\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})',
+                    'string': r'(From(\s+)\d{2}/\d{2}/\d{2,4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{2,4})',
                     'weight': 1
                 },
             ],

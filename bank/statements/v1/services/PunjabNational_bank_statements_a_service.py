@@ -34,7 +34,6 @@ class PunjabNationalBankStatementsA(object):
         all_string_date_list = []
         for date_regex in [r'(\d{2}/\d{2}/\d{4})', r'(\d{2}-[a-zA-Z]{3}-\d{4})', r'(\d{2}-\d{2}-\d{4})']:
             all_string_date_list += re.findall(date_regex, date_input)
-        print all_string_date_list
         for string_date in all_string_date_list:
             for strp_string in ['%d/%m/%Y', '%d-%b-%Y', '%d-%m-%Y']:
                 try:
