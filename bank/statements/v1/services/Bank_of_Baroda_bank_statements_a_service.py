@@ -194,7 +194,7 @@ class BankOfBarodaBankStatementsA(object):
             data = deepcopy(statement)
             for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdraw_deposit', 'balance']:
+            for key in ['withdraw', 'deposit', 'balance']:
                 data[key] = str(data[key])
             statements.append(data)
         return statements

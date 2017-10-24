@@ -96,7 +96,6 @@ class CITIBankStatementsB(object):
                     break
                 except Exception as e:
                     pass
-        print all_date_list
         if all_date_list and min(all_date_list) <= self.stats['start_date']:
             self.stats['pdf_text_start_date'] = min(all_date_list)
         else:

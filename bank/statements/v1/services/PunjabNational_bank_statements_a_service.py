@@ -82,17 +82,15 @@ class PunjabNationalBankStatementsA(object):
 
     def __get_statement(self, data_list):
         statement_dict = {}
-        # try:
-        print data_list
-        statement_dict.update({
-            'transaction_date': self.__get_date(data_list[0]),
-            'description': ' '.join(data_list[1:]),
-            'withdraw_deposit': self.__get_withdraw_deposit('*'.join(data_list[1:])),
-            'balance': self.__get_balance('*'.join(data_list[1:])),
-        })
-        # except Exception as e:
-        # print "Following error occured while processing
-        # {data_list}:{error}".format(data_list=str(data_list), error=str(e))
+        try:
+            statement_dict.update({
+                'transaction_date': self.__get_date(data_list[0]),
+                'description': ' '.join(data_list[1:]),
+                'withdraw_deposit': self.__get_withdraw_deposit('*'.join(data_list[1:])),
+                'balance': self.__get_balance('*'.join(data_list[1:])),
+            })
+        except Exception as e:
+            print "Following error occured while processing {data_list}:{error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
     def __set_statements(self):
@@ -138,9 +136,9 @@ class PunjabNationalBankStatementsA(object):
                     pdf_date_regex, self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
                 date_string_list = []
-                for strp_string in ['%d/%m/%Y', '%d-%b-%Y', '%d-%m-%Y']:
-                    date_string_list += re.findall(
-                        r'(\d{2}/\d{2}/\d{4})', from_to_string_date)
+                for date_regex in [r'(\d{2}/\d{2}/\d{4})', r'(\d{2}-[a-zA-Z]{3}-\d{4})', r'(\d{2}-\d{2}-\d{4})']:
+                    date_string_list += re.findall(date_regex,
+                                                   from_to_string_date)
                 for date_string in date_string_list:
                     pdf_dates.append(date_string)
         except Exception as e:
@@ -153,7 +151,7 @@ class PunjabNationalBankStatementsA(object):
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            for strp_string in ['%d/%m/%Y', '%d-%b-%Y']:
+            for strp_string in ['%d/%m/%Y', '%d-%b-%Y', '%d-%m-%Y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))
