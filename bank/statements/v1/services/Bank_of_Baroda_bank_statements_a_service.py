@@ -29,14 +29,16 @@ class BankOfBarodaBankStatementsA(object):
 
     def __get_date(self, date_input):
         all_date_list = []
-        all_string_date_list = re.findall(
-            r'(\d{2}/\d{2}/\d{4})', date_input)
+        all_string_date_list = []
+        for date_regex in [r'(\d{2}/\d{2}/\d{2,4})']:
+            all_string_date_list += re.findall(date_regex, date_input)
         for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
-            except Exception as e:
-                pass
+            for strp_string in ['%d/%m/%Y', '%d/%m/%y']:
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, strp_string))
+                except Exception as e:
+                    pass
         return all_date_list[0]
 
     def __get_amount(self, input_string):
@@ -76,10 +78,16 @@ class BankOfBarodaBankStatementsA(object):
     def __get_pdf_dates(self):
         pdf_dates = []
         try:
-            from_to_string_date_list = re.findall(
-                r'(From(\s+)\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})', self.pdf_text)[0]
+            from_to_string_date_list = []
+            for pdf_date_regex in [r'(From(\s+)\d{2}/\d{2}/\d{2,4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{2,4})']:
+                from_to_string_date_list += re.findall(
+                    pdf_date_regex, self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
-                for date_string in re.findall(r'(\d{2}/\d{2}/\d{4})', from_to_string_date):
+                date_string_list = []
+                for date_regex in [r'(\d{2}/\d{2}/\d{4})', r'(\d{2}/\d{2}/\d{2,4})']:
+                    date_string_list += re.findall(date_regex,
+                                                   from_to_string_date)
+                for date_string in date_string_list:
                     pdf_dates.append(date_string)
         except Exception as e:
             pass
@@ -194,7 +202,7 @@ class BankOfBarodaBankStatementsA(object):
             data = deepcopy(statement)
             for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdraw_deposit', 'balance']:
+            for key in ['withdraw', 'deposit', 'balance']:
                 data[key] = str(data[key])
             statements.append(data)
         return statements

@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 3
+MIN_COLUMNS = 2
 MAX_COLUMNS = 9
 MIN_WITHDRAWDEPOSIT_COLUMNS = 3
 MIN_WITHDRAWDEPOSIT_PARTICULAR_COLUMNS = 4

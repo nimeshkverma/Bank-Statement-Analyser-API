@@ -27,13 +27,17 @@ class KotakBankStatementsA(object):
         self.__set_stats()
 
     def __get_amount(self, input_string):
-        raw_amount = input_string
-        for to_be_replaced in ['(Cr)', '(Dr)', ',']:
-            raw_amount = raw_amount.replace(to_be_replaced, '')
-        try:
-            return int(float(raw_amount))
-        except Exception as e:
-            return 0
+        all_amount_list = []
+        all_string_amount_list = re.findall(r'([0-9,]+\.\d{2})', input_string)
+        for string_amount in all_string_amount_list:
+            for to_be_replaced in [' ', ',']:
+                string_amount = string_amount.replace(to_be_replaced, '')
+            try:
+                all_amount_list.append(int(float(string_amount)))
+                break
+            except Exception as e:
+                pass
+        return all_amount_list[0] if all_amount_list else 0
 
     def __get_date(self, date_input):
         all_string_date_list = re.findall(
@@ -71,7 +75,7 @@ class KotakBankStatementsA(object):
         return statement_dict
 
     def __set_statements_and_transaction(self):
-        for data_list in self.raw_table_data.get('body', []):
+        for data_list in [self.raw_table_data.get('headers', [])] + self.raw_table_data.get('body', []):
             if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
                 statement_dict = self.__get_statement_set_transaction(
                     data_list)

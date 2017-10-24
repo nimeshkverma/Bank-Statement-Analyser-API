@@ -34,10 +34,18 @@ class ICICIBankStatementsA(object):
             return 0
 
     def __get_date(self, date_input):
-        try:
-            return datetime.datetime.strptime(date_input, '%d/%m/%Y')
-        except Exception as e:
-            return datetime.datetime.strptime(date_input, '%d-%m-%Y')
+        all_date_list = []
+        all_string_date_list = []
+        for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}-\d{2}-\d{2,4})']:
+            all_string_date_list += re.findall(date_regex, date_input)
+        for string_date in all_string_date_list:
+            for strp_string in ['%d/%m/%Y', '%d-%m-%Y', '%d/%m/%y', '%d-%m-%y']:
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, strp_string))
+                except Exception as e:
+                    pass
+        return all_date_list[0]
 
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
@@ -95,26 +103,47 @@ class ICICIBankStatementsA(object):
                 self.statements.append(
                     statement_dict) if statement_dict else None
 
+    def __get_pdf_dates(self):
+        pdf_dates = []
+        try:
+            from_to_string_date_list = []
+            for pdf_date_regex in [r'(from\s?\d{2}/\d{2}/\d{2,4}\s?to\s?\d{2}/\d{2}/\d{2,4})',
+                                   r'(from\s?\d{2}-\d{2}-\d{2,4}\s?to\s?\d{2}-\d{2}-\d{2,4})', ]:
+                from_to_string_date_list += re.findall(
+                    pdf_date_regex, self.pdf_text)[0]
+            for from_to_string_date in from_to_string_date_list:
+                date_string_list = []
+                for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}-\d{2}-\d{2,4})']:
+                    date_string_list += re.findall(date_regex,
+                                                   from_to_string_date)
+                for date_string in date_string_list:
+                    pdf_dates.append(date_string)
+        except Exception as e:
+            pass
+        return pdf_dates
+
     def __set_pdf_text_stats(self):
         self.stats['start_date'] = min(self.transactions.keys())
         self.stats['end_date'] = max(self.transactions.keys())
-        all_string_date_list = re.findall(
-            r'(from\s?\d{2}/\d{2}/\d{2,4}\s?to\s?\d{2}/\d{2}/\d{2,4})', self.pdf_text)
-        if not all_string_date_list:
-            all_string_date_list = re.findall(
-                r'(\d{2}/\d{2}/\d{2,4})', self.pdf_text)
+        all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            try:
-                for date_match in re.findall(r'(\d{2}/\d{2}/\d{2,4})', string_date):
+            for strp_string in ['%d/%m/%Y', '%d-%m-%Y', '%d/%m/%y', '%d-%m-%y']:
+                try:
                     all_date_list.append(
-                        datetime.datetime.strptime(date_match, '%d/%m/%Y'))
-            except Exception as e:
-                pass
-        self.stats['pdf_text_start_date'] = min(
-            all_date_list) if all_date_list else self.stats['start_date']
-        self.stats['pdf_text_end_date'] = max(
-            all_date_list) if all_date_list else self.stats['end_date']
+                        datetime.datetime.strptime(string_date, strp_string))
+                    break
+                except Exception as e:
+                    pass
+        if all_date_list and min(all_date_list) <= self.stats['start_date']:
+            self.stats['pdf_text_start_date'] = min(all_date_list)
+        else:
+            self.stats['pdf_text_start_date'] = self.stats['start_date']
+        if all_date_list and max(all_date_list) >= self.stats['end_date']:
+            self.stats['pdf_text_end_date'] = max(all_date_list)
+        else:
+            self.stats['pdf_text_end_date'] = self.stats['end_date']
+
         self.stats['days'] = (self.stats['pdf_text_end_date'] -
                               self.stats['pdf_text_start_date'] + datetime.timedelta(1)).days
 

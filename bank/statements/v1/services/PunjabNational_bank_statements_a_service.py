@@ -31,19 +31,21 @@ class PunjabNationalBankStatementsA(object):
 
     def __get_date(self, date_input):
         all_date_list = []
-        all_string_date_list = re.findall(
-            r'(\d{2}/\d{2}/\d{4})', date_input)
+        all_string_date_list = []
+        for date_regex in [r'(\d{2}/\d{2}/\d{4})', r'(\d{2}-[a-zA-Z]{3}-\d{4})', r'(\d{2}-\d{2}-\d{4})']:
+            all_string_date_list += re.findall(date_regex, date_input)
         for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%Y'))
-            except Exception as e:
-                pass
+            for strp_string in ['%d/%m/%Y', '%d-%b-%Y', '%d-%m-%Y']:
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, strp_string))
+                except Exception as e:
+                    pass
         return all_date_list[0]
 
     def __get_amount(self, input_string):
         raw_amount = input_string
-        for to_be_replaced in ['Cr.', ' ', ',', '*']:
+        for to_be_replaced in ['Cr.', 'Dr.', ' ', ',', '*']:
             raw_amount = raw_amount.replace(to_be_replaced, '')
         try:
             return int(float(raw_amount))
@@ -53,10 +55,14 @@ class PunjabNationalBankStatementsA(object):
     def __get_balance(self, balance_input):
         all_balance_list = []
         all_string_balance_list = re.findall(
-            r'([0-9,]+\d{0,3}\.\d{2} Cr.)', balance_input)
+            r'([0-9,]+\d{0,3}\.\d{2} [C|D]r.)', balance_input)
         for string_balance in all_string_balance_list:
             try:
-                all_balance_list.append(self.__get_amount(string_balance))
+                balance = self.__get_amount(string_balance)
+                if 'Dr.' in string_balance:
+                    print string_balance, balance
+                    balance = -1 * balance
+                all_balance_list.append(balance)
             except Exception as e:
                 pass
         return all_balance_list[-1]
@@ -100,10 +106,12 @@ class PunjabNationalBankStatementsA(object):
         try:
             previous_date = self.statements[0]['transaction_date']
             for statement in self.statements[1:]:
-                if previous_date <= statement['transaction_date']:
+                if previous_date < statement['transaction_date']:
                     positive_differences += 1
-                else:
+                elif previous_date > statement['transaction_date']:
                     negitive_differences += 1
+                else:
+                    pass
                 previous_date = statement['transaction_date']
             print negitive_differences, positive_differences
             if negitive_differences > positive_differences:
@@ -119,10 +127,18 @@ class PunjabNationalBankStatementsA(object):
     def __get_pdf_dates(self):
         pdf_dates = []
         try:
-            from_to_string_date_list = re.findall(
-                r'(\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})', self.pdf_text)[0]
+            from_to_string_date_list = []
+            for pdf_date_regex in [r'(\d{2}/\d{2}/\d{4}(\s+)?to(\s+)?\d{2}/\d{2}/\d{4})',
+                                   r'(\d{2}-\d{2}-\d{4}(\s+)?to(\s+)?\d{2}-\d{2}-\d{4})',
+                                   r'(\d{2}-[a-zA-Z]{3}-\d{4}(\s+)?to(\s+)?\d{2}-[a-zA-Z]{3}-\d{4})']:
+                from_to_string_date_list += re.findall(
+                    pdf_date_regex, self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
-                for date_string in re.findall(r'(\d{2}/\d{2}/\d{4})', from_to_string_date):
+                date_string_list = []
+                for date_regex in [r'(\d{2}/\d{2}/\d{4})', r'(\d{2}-[a-zA-Z]{3}-\d{4})', r'(\d{2}-\d{2}-\d{4})']:
+                    date_string_list += re.findall(date_regex,
+                                                   from_to_string_date)
+                for date_string in date_string_list:
                     pdf_dates.append(date_string)
         except Exception as e:
             pass
@@ -134,7 +150,7 @@ class PunjabNationalBankStatementsA(object):
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            for strp_string in ['%d/%m/%Y']:
+            for strp_string in ['%d/%m/%Y', '%d-%b-%Y', '%d-%m-%Y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))

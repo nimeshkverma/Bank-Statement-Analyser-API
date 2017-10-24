@@ -6,8 +6,8 @@ MIN_COLUMNS = 5
 MAX_COLUMNS = 5
 
 
-HEADER = set(['Date', 'Description', 'Withdrawal', 'Deposit',
-              'Date Description', 'Withdrawal Deposit', 'Balance'])
+HEADER = set(['DATE', 'CHQ', 'NARATION', 'COD',
+              'DEBIT', 'CREDIT', 'BALANCE', 'NO'])
 
 MAX_START_DAY_OF_MONTH = 5
 MIN_END_DAY_OF_MONTH = 25

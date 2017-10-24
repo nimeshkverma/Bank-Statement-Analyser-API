@@ -92,7 +92,7 @@ class YesBankStatementsA(object):
                 self.transactions[statement_dict[
                     'transaction_date']] = statement_dict['balance']
         except Exception as e:
-        print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))
+            print "Following error occured while processing {data_list} :{error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
     def __set_statements_and_transaction(self):
@@ -228,7 +228,7 @@ class YesBankStatementsA(object):
             data = deepcopy(statement)
             for key in ['transaction_date']:
                 data[key] = data[key].strftime("%d/%m/%y")
-            for key in ['withdraw_deposit', 'balance']:
+            for key in ['withdraw', 'deposit', 'balance']:
                 data[key] = str(data[key])
             statements.append(data)
         return statements

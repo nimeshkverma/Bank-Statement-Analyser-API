@@ -18,6 +18,7 @@ from tabula import read_pdf
 from django.conf import settings
 
 import re
+from bank_identifier_service import BankIdentifier
 from ICICI_bank_statements_a_service import ICICIBankStatementsA
 from ICICI_bank_statements_b_service import ICICIBankStatementsB
 from HDFC_bank_statements_service import HDFCBankStatements
@@ -29,6 +30,22 @@ from Kotak_bank_statements_b_service import KotakBankStatementsB
 from Kotak_bank_statements_c_service import KotakBankStatementsC
 from IDBI_bank_statements_service import IDBIBankStatements
 from IDFC_bank_statements_service import IDFCBankStatements
+from Andra_bank_statements_a_service import AndraBankStatementsA
+from Andra_bank_statements_b_service import AndraBankStatementsB
+from Bank_of_Baroda_bank_statements_a_service import BankOfBarodaBankStatementsA
+from CITI_bank_statements_a_service import CITIBankStatementsA
+from CITI_bank_statements_b_service import CITIBankStatementsB
+from Canara_bank_statements_a_service import CanaraBankStatementsA
+from Canara_bank_statements_b_service import CanaraBankStatementsB
+from Corporation_bank_statements_a_service import CorporationBankStatementsA
+from IndianOverseas_bank_statements_service import IndianOverseasStatementsA
+from Indian_bank_statements_a_service import IndianBankStatementsA
+from IndusInd_bank_statements_a_service import IndusIndBankStatementsA
+from IndusInd_bank_statements_b_service import IndusIndBankStatementsB
+from OrientalBankOfCommerce_bank_statements_a_service import OrientalBankOfCommerceBankStatementsA
+from PunjabNational_bank_statements_a_service import PunjabNationalBankStatementsA
+from Union_bank_statements_a_service import UnionBankStatementsA
+from Yes_bank_statements_a_service import YesBankStatementsA
 
 from database_service import Database
 from email_service import send_mail
@@ -161,58 +178,94 @@ class BankStatements(object):
             self.pdf_path, self.password)
         self.raw_table_data = self.bank_statememt_raw_data.raw_table_data
         self.pdf_text = self.bank_statememt_raw_data.pdf_text
+        self.bank_identifier = BankIdentifier(
+            self.raw_table_data, self.pdf_text)
         self.bank_dict = {
             'icici_a': {
-                'unique_header': 'Transaction Remarks',
                 'class': ICICIBankStatementsA,
             },
             'icici_b': {
-                'unique_header': 'ACCOUNT TYPE',
                 'class': ICICIBankStatementsB,
             },
-            'hdfc': {
-                'unique_header': 'Narration',
+            'hdfc_a': {
                 'class': HDFCBankStatements,
             },
             'axis_a': {
-                'unique_header': 'Particulars',
                 'class': AXISBankStatementsA,
             },
             'axis_b': {
-                'unique_header': 'Bank Account',
                 'class': AXISBankStatementsB,
             },
-            'sbi': {
-                'unique_header': 'Description',
+            'sbi_a': {
                 'class': SBIBankStatements,
             },
             'kotak_a': {
-                'unique_header': 'Chq/Ref No',
                 'class': KotakBankStatementsA,
             },
             'kotak_b': {
-                'unique_header': 'Chq/Ref No.',
                 'class': KotakBankStatementsB,
             },
             'kotak_c': {
-                'unique_header': 'Account Statement',
                 'class': KotakBankStatementsC,
             },
             'idbi_a': {
-                'unique_header': 'Srl',
                 'class': IDBIBankStatements,
             },
             'idbi_b': {
-                'unique_header': 'Sl',
                 'class': IDBIBankStatements,
             },
-            'idfc': {
-                'unique_header': 'Total Credit',
+            'idfc_a': {
                 'class': IDFCBankStatements,
-            }
+            },
+            'citi_a': {
+                'class': CITIBankStatementsA,
+            },
+            'citi_b': {
+                'class': CITIBankStatementsB,
+            },
+            'canara_a': {
+                'class': CanaraBankStatementsA,
+            },
+            'canara_b': {
+                'class': CanaraBankStatementsB,
+            },
+            'yes_a': {
+                'class': YesBankStatementsA,
+            },
+            'baroda_a': {
+                'class': BankOfBarodaBankStatementsA,
+            },
+            'indusind_a': {
+                'class': IndusIndBankStatementsA,
+            },
+            'indusind_b': {
+                'class': IndusIndBankStatementsB,
+            },
+            'pnb_a': {
+                'class': PunjabNationalBankStatementsA,
+            },
+            'union_a': {
+                'class': UnionBankStatementsA,
+            },
+            'indian_a': {
+                'class': IndianBankStatementsA,
+            },
+            'andra_a': {
+                'class': AndraBankStatementsA,
+            },
+            'andra_b': {
+                'class': AndraBankStatementsB,
+            },
+            'corporation_a': {
+                'class': CorporationBankStatementsA,
+            },
+            'oriental_a': {
+                'class': OrientalBankOfCommerceBankStatementsA,
+            },
+            'overseas_a': {
+                'class': IndianOverseasStatementsA,
+            },
         }
-        self.banks = ['idfc', 'idbi_a', 'idbi_b', 'kotak_c', 'kotak_b',
-                      'kotak_a', 'icici_a', 'hdfc', 'axis_a', 'axis_b', 'sbi', 'icici_b', ]
         self.bank_name = None
         self.specific_bank = self.__get_specific_bank()
 
@@ -223,11 +276,18 @@ class BankStatements(object):
         return False
 
     def __get_specific_bank(self):
-        for bank in self.banks:
-            if self.__term_in_header(self.bank_dict[bank]['unique_header']):
-                self.bank_name = bank
-                return self.bank_dict[bank]['class'](self.raw_table_data, self.pdf_text)
-        return None
+        specific_bank = None
+        for bank_name in self.bank_identifier.prominent_bank_list + self.bank_identifier.less_prominent_bank_list:
+            try:
+                print bank_name
+                specific_bank = self.bank_dict[bank_name][
+                    'class'](self.raw_table_data, self.pdf_text)
+                self.bank_name = bank_name
+                print bank_name
+                break
+            except Exception as e:
+                pass
+        return specific_bank
 
 
 class BankStatementsAnalyser(object):
@@ -322,6 +382,7 @@ class BankStatementsAnalyser(object):
             'loan_details': self.loan_details,
         }
         if self.bank_statements and self.bank_statements.specific_bank:
+            print self.bank_statements.specific_bank, 100010101
             data['bank_name'] = self.bank_statements.bank_name
             data.update(self.bank_statements.specific_bank.data_json(
                 self.loan_details.get('loan_emi', 0)))
