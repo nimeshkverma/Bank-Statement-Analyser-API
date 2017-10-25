@@ -113,7 +113,6 @@ class PunjabNationalBankStatementsA(object):
                 else:
                     pass
                 previous_date = statement['transaction_date']
-            print negitive_differences, positive_differences
             if negitive_differences > positive_differences:
                 self.statements.reverse()
         except Exception as e:

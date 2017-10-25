@@ -78,7 +78,6 @@ class OrientalBankOfCommerceBankStatementsA(object):
         negitive_differences = 1
         try:
             previous_date = self.statements[0]['transaction_date']
-
             for statement in self.statements[1:]:
                 if previous_date < statement['transaction_date']:
                     positive_differences += 1

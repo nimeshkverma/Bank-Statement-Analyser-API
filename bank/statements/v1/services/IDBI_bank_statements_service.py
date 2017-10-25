@@ -88,10 +88,12 @@ class IDBIBankStatements(object):
         try:
             previous_date = self.statements[0]['transaction_date']
             for statement in self.statements[1:]:
-                if previous_date <= statement['transaction_date']:
+                if previous_date < statement['transaction_date']:
                     positive_differences += 1
-                else:
+                elif previous_date > statement['transaction_date']:
                     negitive_differences += 1
+                else:
+                    pass
                 previous_date = statement['transaction_date']
             if negitive_differences > positive_differences:
                 self.statements.reverse()
