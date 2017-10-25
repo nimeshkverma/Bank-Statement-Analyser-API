@@ -706,7 +706,7 @@ PROMINENT_BANK_FEATURES = {
         'table_dimensions': {
             'features': [
                 {
-                    'minimum_columns': 4,
+                    'minimum_columns': 3,
                     'weight': 1
                 },
                 {
