@@ -102,8 +102,11 @@ class IndusIndBankStatementsA(object):
             from_to_string_date_list = []
             for pdf_date_regex in [r'(From(\s+):(\s+)[a-zA-Z]{3} \d{1,2}, \d{4}(\s+)?To(\s+)?:(\s+)[a-zA-Z]{3} \d{1,2}, \d{4})',
                                    r'(From(\s+):(\s+)\d{1,2} [a-zA-Z]{3} \d{4}(\s+)?To(\s+)?:(\s+)\d{1,2} [a-zA-Z]{3} \d{4})']:
-                from_to_string_date_list += re.findall(
-                    pdf_date_regex, self.pdf_text)[0]
+                try:
+                    from_to_string_date_list += re.findall(
+                        pdf_date_regex, self.pdf_text)[0]
+                except Exception as e:
+                    pass
             for from_to_string_date in from_to_string_date_list:
                 date_string_list = []
                 for date_regex in [r'([a-zA-Z]{3} \d{1,2}, \d{4})', r'(\d{1,2} [a-zA-Z]{3} \d{4})']:
