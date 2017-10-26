@@ -16,11 +16,13 @@ class IDFCBankStatements(object):
     """Class to analyse the data obtained from IDFC Bank"""
 
     def __init__(self, raw_table_data, pdf_text):
-        self.raw_table_data = deepcopy(raw_table_data)
+        self.raw_table_data = raw_table_data
         self.pdf_text = pdf_text
         self.statements = []
         self.transactions = {}
-        self.__set_statements_and_transaction()
+        self.__set_statements()
+        self.__set_positive_statement_gradient()
+        self.__set_transactions()
         self.stats = {}
         self.__set_pdf_text_stats()
         self.all_day_transactions = self.__get_all_day_transactions()
@@ -47,7 +49,7 @@ class IDFCBankStatements(object):
                 pass
         return all_date_list[0]
 
-    def __get_statement_set_transaction(self, data_list):
+    def __get_statement(self, data_list):
         statement_dict = {}
         try:
             statement_dict = {
@@ -56,20 +58,40 @@ class IDFCBankStatements(object):
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             }
-            if statement_dict:
-                self.transactions[statement_dict[
-                    'transaction_date']] = statement_dict['balance']
         except Exception as e:
             print "Following error occured while processing {data_list} : {error}".format(data_list=str(data_list), error=str(e))
         return statement_dict
 
-    def __set_statements_and_transaction(self):
+    def __set_statements(self):
         for data_list in self.raw_table_data.get('body', []):
             if MIN_COLUMNS <= len(data_list) <= MAX_COLUMNS and not HEADER.intersection(set(data_list)):
-                statement_dict = self.__get_statement_set_transaction(
+                statement_dict = self.__get_statement(
                     data_list)
                 self.statements.append(
                     statement_dict) if statement_dict else None
+
+    def __set_positive_statement_gradient(self):
+        positive_differences = 1
+        negitive_differences = 1
+        try:
+            previous_date = self.statements[0]['transaction_date']
+            for statement in self.statements[1:]:
+                if previous_date < statement['transaction_date']:
+                    positive_differences += 1
+                elif previous_date > statement['transaction_date']:
+                    negitive_differences += 1
+                else:
+                    pass
+                previous_date = statement['transaction_date']
+            if negitive_differences > positive_differences:
+                self.statements.reverse()
+        except Exception as e:
+            pass
+
+    def __set_transactions(self):
+        for statement in self.statements:
+            self.transactions[
+                statement['transaction_date']] = statement['balance']
 
     def __get_pdf_dates(self):
         from_to_string_date_list = re.findall(
