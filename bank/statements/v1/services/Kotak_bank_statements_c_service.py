@@ -53,7 +53,7 @@ class KotakBankStatementsC(object):
                 'transaction_date': self.__get_date(data_list[1]),
                 'description': data_list[2],
                 'cheque_ref': data_list[3],
-                'transaction_type': '',
+                'transaction_type': 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-4]),
                 'balance': self.__get_amount(data_list[-2]),
             }

@@ -43,7 +43,7 @@ class KotakBankStatementsB(object):
             statement_dict = {
                 'transaction_date': self.__get_date(data_list[0]),
                 'narration': data_list[1],
-                'transaction_type': '',
+                'transaction_type': 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             }
