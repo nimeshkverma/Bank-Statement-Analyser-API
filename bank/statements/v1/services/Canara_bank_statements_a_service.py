@@ -164,6 +164,8 @@ class CanaraBankStatementsA(object):
                 opening_balance = opening_balance_statement['balance']
             if opening_balance != None:
                 balance = opening_balance
+        else:
+            opening_balance = self.transactions.get(self.stats['start_date'])
         return balance if balance != None else self.statements[0]['balance']
 
     def __get_all_day_transactions(self):

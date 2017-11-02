@@ -53,7 +53,7 @@ class IndusIndBankStatementsB(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[0]),
-                'description': data_list[-3],
+                'description': data_list[-3] if data_list[-3] else 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             })

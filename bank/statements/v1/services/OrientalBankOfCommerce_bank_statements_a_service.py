@@ -57,7 +57,7 @@ class OrientalBankOfCommerceBankStatementsA(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[2]),
-                'description': ' '.join(data_list[3:-2]),
+                'description': ' '.join(data_list[3:-2]) if ' '.join(data_list[3:-2]) else 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             })

@@ -84,7 +84,7 @@ class PunjabNationalBankStatementsA(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[0]),
-                'description': ' '.join(data_list[1:]),
+                'description': ' '.join(data_list[1:]) if ' '.join(data_list[1:]) else 'Not Found',
                 'withdraw_deposit': self.__get_withdraw_deposit('*'.join(data_list[1:])),
                 'balance': self.__get_balance('*'.join(data_list[1:])),
             })
