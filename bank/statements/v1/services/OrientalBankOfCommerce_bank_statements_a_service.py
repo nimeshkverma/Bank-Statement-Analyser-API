@@ -32,10 +32,10 @@ class OrientalBankOfCommerceBankStatementsA(object):
     def __get_date(self, date_input):
         all_date_list = []
         all_string_date_list = []
-        for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}.\d{2}.\d{2})']:
+        for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}.\d{2}.\d{2})', r'(\d{2}-\d{2}-\d{4})']:
             all_string_date_list += re.findall(date_regex, date_input)
         for string_date in all_string_date_list:
-            for strp_string in ['%d/%m/%Y', '%d/%m/%y', '%m.%d.%y']:
+            for strp_string in ['%d/%m/%Y', '%d/%m/%y', '%m.%d.%y', '%d-%m-%Y', ]:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))
@@ -57,7 +57,7 @@ class OrientalBankOfCommerceBankStatementsA(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[2]),
-                'description': ' '.join(data_list[3:-2]),
+                'description': ' '.join(data_list[3:-2]) if ' '.join(data_list[3:-2]) else 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             })
@@ -78,7 +78,6 @@ class OrientalBankOfCommerceBankStatementsA(object):
         negitive_differences = 1
         try:
             previous_date = self.statements[0]['transaction_date']
-
             for statement in self.statements[1:]:
                 if previous_date < statement['transaction_date']:
                     positive_differences += 1
@@ -100,10 +99,19 @@ class OrientalBankOfCommerceBankStatementsA(object):
     def __get_pdf_dates(self):
         pdf_dates = []
         try:
-            from_to_string_date_list = re.findall(
-                r'(Statement Period(\s+)?:(\s+)?From Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4}(\s+)?To Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4})', self.pdf_text)[0]
+            from_to_string_date_list = []
+            for pdf_date_regex in [r'(Statement Period(\s+)?:(\s+)?From Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4}(\s+)?To Date(\s+)?:(\s+)?\d{2}/\d{2}/\d{4})', r'(Statement Period(\s+)?:(\s+)?From Date(\s+)?:(\s+)?\d{2}-\d{2}-\d{4}(\s+)?To Date(\s+)?:(\s+)?\d{2}-\d{2}-\d{4})']:
+                try:
+                    from_to_string_date_list += re.findall(
+                        pdf_date_regex, self.pdf_text)[0]
+                except Exception as e:
+                    pass
             for from_to_string_date in from_to_string_date_list:
-                for date_string in re.findall(r'(\d{2}/\d{2}/\d{4})', from_to_string_date):
+                date_string_list = []
+                for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}-\d{2}-\d{4})']:
+                    date_string_list += re.findall(date_regex,
+                                                   from_to_string_date)
+                for date_string in date_string_list:
                     pdf_dates.append(date_string)
         except Exception as e:
             pass
@@ -115,7 +123,7 @@ class OrientalBankOfCommerceBankStatementsA(object):
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            for strp_string in ['%d/%m/%Y']:
+            for strp_string in ['%d/%m/%Y', '%d-%m-%Y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))

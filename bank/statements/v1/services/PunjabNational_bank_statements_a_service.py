@@ -84,7 +84,7 @@ class PunjabNationalBankStatementsA(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[0]),
-                'description': ' '.join(data_list[1:]),
+                'description': ' '.join(data_list[1:]) if ' '.join(data_list[1:]) else 'Not Found',
                 'withdraw_deposit': self.__get_withdraw_deposit('*'.join(data_list[1:])),
                 'balance': self.__get_balance('*'.join(data_list[1:])),
             })
@@ -113,7 +113,6 @@ class PunjabNationalBankStatementsA(object):
                 else:
                     pass
                 previous_date = statement['transaction_date']
-            print negitive_differences, positive_differences
             if negitive_differences > positive_differences:
                 self.statements.reverse()
         except Exception as e:

@@ -58,7 +58,7 @@ class AXISBankStatementsA(object):
         statement_dict = {}
         try:
             if len(data_list) == MIN_COLUMNS and self.__is_date(data_list[0]):
-                balance = data_list[-1].split(' ')[0]
+                balance = re.findall(r'(\d+\.\d{2})', '*'.join(data_list))[-1]
                 statement_dict = {
                     'transaction_date': self.__get_date(data_list[0]),
                     'particulars': data_list[-3],

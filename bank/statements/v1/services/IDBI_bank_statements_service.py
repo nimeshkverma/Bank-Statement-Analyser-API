@@ -38,17 +38,15 @@ class IDBIBankStatements(object):
             return 0
 
     def __get_date(self, date_input):
-        all_string_date_list = re.findall(
-            r'\d{2}/\d{2}/\d{2,4}', date_input)
         all_date_list = []
+        all_string_date_list = []
+        for date_regex in [r'(\d{2}/\d{2}/\d{2,4})', r'(\d{2}-\d{2}-\d{2,4})']:
+            all_string_date_list += re.findall(date_regex, date_input)
         for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%d/%m/%y'))
-            except Exception as e:
+            for strp_string in ['%d/%m/%Y', '%d/%m/%y', '%d-%m-%Y', '%d-%m-%y']:
                 try:
                     all_date_list.append(
-                        datetime.datetime.strptime(string_date, '%d/%m/%Y'))
+                        datetime.datetime.strptime(string_date, strp_string))
                 except Exception as e:
                     pass
         return all_date_list[0]
@@ -60,7 +58,7 @@ class IDBIBankStatements(object):
                 'sr_no': data_list[0],
                 'transaction_date': self.__get_date(data_list[2]),
                 'narration': data_list[3],
-                'transaction_type': '',
+                'transaction_type': 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             }
@@ -88,10 +86,12 @@ class IDBIBankStatements(object):
         try:
             previous_date = self.statements[0]['transaction_date']
             for statement in self.statements[1:]:
-                if previous_date <= statement['transaction_date']:
+                if previous_date < statement['transaction_date']:
                     positive_differences += 1
-                else:
+                elif previous_date > statement['transaction_date']:
                     negitive_differences += 1
+                else:
+                    pass
                 previous_date = statement['transaction_date']
             if negitive_differences > positive_differences:
                 self.statements.reverse()

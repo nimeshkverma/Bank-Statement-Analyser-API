@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 3
+MIN_COLUMNS = 2
 MAX_COLUMNS = 4
 
 
@@ -48,15 +48,36 @@ class IndusIndBankStatementsB(object):
         except Exception as e:
             return 0
 
+    def __get_amount(self, input_string):
+        all_amount_list = []
+        all_string_amount_list = re.findall(r'([0-9,]+\.\d{2})', input_string)
+        for string_amount in all_string_amount_list:
+            for to_be_replaced in ['CR', ' ', ',', 'DR']:
+                string_amount = string_amount.replace(to_be_replaced, '')
+            try:
+                all_amount_list.append(int(float(string_amount)))
+                break
+            except Exception as e:
+                pass
+        return all_amount_list[0] if all_amount_list else 0
+
     def __get_statement_set_transaction(self, data_list):
         statement_dict = {}
         try:
-            statement_dict.update({
-                'transaction_date': self.__get_date(data_list[0]),
-                'description': data_list[-3],
-                'withdraw_deposit': self.__get_amount(data_list[-2]),
-                'balance': self.__get_amount(data_list[-1]),
-            })
+            if len(data_list) == 2:
+                statement_dict.update({
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'description': data_list[0] if data_list[0] else 'Not Found',
+                    'withdraw_deposit': self.__get_amount(data_list[-1].split(' ')[0]),
+                    'balance': self.__get_amount(data_list[-1].split(' ')[-1]),
+                })
+            else:
+                statement_dict.update({
+                    'transaction_date': self.__get_date(data_list[0]),
+                    'description': data_list[-3] if data_list[-3] else 'Not Found',
+                    'withdraw_deposit': self.__get_amount(data_list[-2]),
+                    'balance': self.__get_amount(data_list[-1]),
+                })
             if statement_dict:
                 self.transactions[statement_dict[
                     'transaction_date']] = statement_dict['balance']
@@ -111,6 +132,13 @@ class IndusIndBankStatementsB(object):
 
     def __get_first_day_balance(self):
         balance = None
+        try:
+            for data_list in self.raw_table_data.get('body', []):
+                if 'brought forward' in '*'.join(data_list).lower():
+                    balance = self.__get_amount(data_list[-1])
+                    break
+        except Exception as e:
+            pass
         if self.stats['start_date'] <= self.stats['pdf_text_start_date']:
             opening_balance = None
             opening_balance_statement = {}

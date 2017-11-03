@@ -30,14 +30,16 @@ class IndusIndBankStatementsA(object):
 
     def __get_date(self, date_input):
         all_date_list = []
-        all_string_date_list = re.findall(
-            r'([a-zA-Z]{3} \d{1,2}, \d{4})', date_input)
+        all_string_date_list = []
+        for date_regex in [r'([a-zA-Z]{3} \d{1,2}, \d{4})', r'(\d{1,2} [a-zA-Z]{3} \d{4})']:
+            all_string_date_list += re.findall(date_regex, date_input)
         for string_date in all_string_date_list:
-            try:
-                all_date_list.append(
-                    datetime.datetime.strptime(string_date, '%b %d, %Y'))
-            except Exception as e:
-                pass
+            for strp_string in ['%b %d, %Y', '%d %b %Y']:
+                try:
+                    all_date_list.append(
+                        datetime.datetime.strptime(string_date, strp_string))
+                except Exception as e:
+                    pass
         return all_date_list[0]
 
     def __get_amount(self, input_string):
@@ -54,7 +56,7 @@ class IndusIndBankStatementsA(object):
         try:
             statement_dict.update({
                 'transaction_date': self.__get_date(data_list[0]),
-                'description': ' '.join(data_list[1:-3]),
+                'description': ' '.join(data_list[1:-3]) if ' '.join(data_list[1:-3]) else 'Not Found',
                 'withdraw': self.__get_amount(data_list[-3]),
                 'deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
@@ -77,12 +79,13 @@ class IndusIndBankStatementsA(object):
         try:
             previous_date = self.statements[0]['transaction_date']
             for statement in self.statements[1:]:
-                if previous_date <= statement['transaction_date']:
+                if previous_date < statement['transaction_date']:
                     positive_differences += 1
-                else:
+                elif previous_date > statement['transaction_date']:
                     negitive_differences += 1
+                else:
+                    pass
                 previous_date = statement['transaction_date']
-            print negitive_differences, positive_differences
             if negitive_differences > positive_differences:
                 self.statements.reverse()
         except Exception as e:
@@ -96,10 +99,20 @@ class IndusIndBankStatementsA(object):
     def __get_pdf_dates(self):
         pdf_dates = []
         try:
-            from_to_string_date_list = re.findall(
-                r'(From(\s+):(\s+)[a-zA-Z]{3} \d{1,2}, \d{4}(\s+)?To(\s+)?:(\s+)[a-zA-Z]{3} \d{1,2}, \d{4})', self.pdf_text)[0]
+            from_to_string_date_list = []
+            for pdf_date_regex in [r'(From(\s+):(\s+)[a-zA-Z]{3} \d{1,2}, \d{4}(\s+)?To(\s+)?:(\s+)[a-zA-Z]{3} \d{1,2}, \d{4})',
+                                   r'(From(\s+):(\s+)\d{1,2} [a-zA-Z]{3} \d{4}(\s+)?To(\s+)?:(\s+)\d{1,2} [a-zA-Z]{3} \d{4})']:
+                try:
+                    from_to_string_date_list += re.findall(
+                        pdf_date_regex, self.pdf_text)[0]
+                except Exception as e:
+                    pass
             for from_to_string_date in from_to_string_date_list:
-                for date_string in re.findall(r'([a-zA-Z]{3} \d{1,2}, \d{4})', from_to_string_date):
+                date_string_list = []
+                for date_regex in [r'([a-zA-Z]{3} \d{1,2}, \d{4})', r'(\d{1,2} [a-zA-Z]{3} \d{4})']:
+                    date_string_list += re.findall(date_regex,
+                                                   from_to_string_date)
+                for date_string in date_string_list:
                     pdf_dates.append(date_string)
         except Exception as e:
             pass
@@ -111,7 +124,7 @@ class IndusIndBankStatementsA(object):
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            for strp_string in ['%b %d, %Y']:
+            for strp_string in ['%b %d, %Y', '%d %b %Y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))

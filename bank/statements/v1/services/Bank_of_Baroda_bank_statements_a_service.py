@@ -84,7 +84,7 @@ class BankOfBarodaBankStatementsA(object):
                     pdf_date_regex, self.pdf_text)[0]
             for from_to_string_date in from_to_string_date_list:
                 date_string_list = []
-                for date_regex in [r'(\d{2}/\d{2}/\d{4})', r'(\d{2}/\d{2}/\d{2,4})']:
+                for date_regex in [r'(\d{2}/\d{2}/\d{2,4})']:
                     date_string_list += re.findall(date_regex,
                                                    from_to_string_date)
                 for date_string in date_string_list:
@@ -99,7 +99,7 @@ class BankOfBarodaBankStatementsA(object):
         all_string_date_list = self.__get_pdf_dates()
         all_date_list = []
         for string_date in all_string_date_list:
-            for strp_string in ['%d/%m/%Y']:
+            for strp_string in ['%d/%m/%Y', '%d/%m/%y']:
                 try:
                     all_date_list.append(
                         datetime.datetime.strptime(string_date, strp_string))

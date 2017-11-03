@@ -2,7 +2,7 @@ import re
 import datetime
 from copy import deepcopy
 
-MIN_COLUMNS = 4
+MIN_COLUMNS = 3
 MAX_COLUMNS = 10
 
 HEADER = set(['Date', 'Narration Chq/Ref No', 'Withdrawal (Dr)/Deposit (Cr)',
@@ -57,7 +57,7 @@ class KotakBankStatementsA(object):
             statement_dict = {
                 'transaction_date': self.__get_date(data_list[0]),
                 'narration': data_list[1],
-                'transaction_type': '',
+                'transaction_type': 'Not Found',
                 'withdraw_deposit': self.__get_amount(data_list[-2]),
                 'balance': self.__get_amount(data_list[-1]),
             }

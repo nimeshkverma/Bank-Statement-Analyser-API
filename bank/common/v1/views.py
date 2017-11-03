@@ -19,5 +19,20 @@ class OtpCreate(APIView):
                                               otp_code=otp_code,
                                               sms_gateway_template=settings.SMS_GATEWAY_TEMPLATE)
         response = requests.request("GET", url)
-        print response
+        return Response({}, status.HTTP_200_OK)
+
+
+class TransactionalSMS(APIView):
+
+    def post(self, request):
+        payload = {'From': request.data.get('From'),
+                   'To': request.data.get('To'),
+                   'TemplateName': request.data.get('TemplateName'),
+                   'VAR1': request.data.get('VAR1'),
+                   'VAR2': request.data.get('VAR2'),
+                   'VAR3': request.data.get('VAR3'),
+                   }
+        url = settings.SMS_GATEWAY_TRANSACTIONAL_URL.format(
+            sms_gateway_api_key=settings.SMS_GATEWAY_API_KEY)
+        response = requests.request("POST", url, data=payload)
         return Response({}, status.HTTP_200_OK)
