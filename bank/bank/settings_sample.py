@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'statements.apps.StatementsConfig',
     'common.apps.CommonConfig',
+    'cibil.apps.CibilConfig',
+
 ]
 
 MIDDLEWARE_CLASSES = [

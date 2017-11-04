@@ -8,7 +8,7 @@ from django.template import RequestContext
 
 from common.v1.decorators import catch_exception, meta_data_response, iam
 
-from services import document_service
+from common.v1.services import document_service
 from . import serializers
 from . import forms
 from . import tasks
@@ -60,7 +60,9 @@ class StatementAnalyserToolDetails(View):
         form = self.form_class(request.POST, request.FILES)
         if form.is_valid():
             pdf_path = document_service.Document(
-                request.FILES['bank_statements_pdf'].name, request.FILES['bank_statements_pdf']).file_path
+                request.FILES['bank_statements_pdf'].name,
+                request.FILES['bank_statements_pdf'],
+                '/statements/v1/services').file_path
             tasks.send_bank_statement_analysis_tool_mail.delay(form.cleaned_data[
                 'threshold'], pdf_path, form.cleaned_data['bank_statements_pdf_password'])
             return render_to_response(

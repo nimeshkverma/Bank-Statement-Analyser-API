@@ -47,8 +47,8 @@ from PunjabNational_bank_statements_a_service import PunjabNationalBankStatement
 from Union_bank_statements_a_service import UnionBankStatementsA
 from Yes_bank_statements_a_service import YesBankStatementsA
 
-from database_service import Database
-from email_service import send_mail
+from common.v1.services.database_service import Database
+from common.v1.services.email_service import send_mail
 
 
 class BankStatementsRawData(object):
