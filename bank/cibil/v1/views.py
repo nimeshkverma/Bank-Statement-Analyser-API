@@ -31,10 +31,8 @@ class CIBILReportTool(View):
                 request.FILES['cibil_report_pdf'].name,
                 request.FILES['cibil_report_pdf'],
                 '/cibil/v1/services').file_path
-            # tasks.send_bank_statement_analysis_tool_mail.delay(form.cleaned_data[
-            tasks.send_cibil_report_analysis_tool_mail(
+            tasks.send_cibil_report_analysis_tool_mail.delay(
                 pdf_path, request.FILES['cibil_report_pdf'].name)
-            print pdf_path, request.FILES['cibil_report_pdf'].name
             return render_to_response(
                 self.form_template,
                 {
