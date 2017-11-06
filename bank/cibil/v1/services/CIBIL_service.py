@@ -20,7 +20,7 @@ from tabula import read_pdf
 from django.conf import settings
 
 from common.v1.services.email_service import send_mail
-from CIBIL_constants import CIBIL_ATTRIBUTE_DATA
+from CIBIL_constants import CIBIL_ATTRIBUTE_DATA, CIBIL_ATTRIBUTE_LIST
 
 
 class CIBILReportRawData(object):
@@ -146,17 +146,7 @@ class CIBILReport(object):
     def __init__(self, cibil_report_path):
         self.cibil_report_path = cibil_report_path
         self.cibil_report_raw = CIBILReportRawData(self.cibil_report_path)
-        self.attribute_list = [
-            'cibil_score',
-            'total_loan_accounts',
-            'total_loan_accounts_overdue',
-            'total_loan_accounts_zero_balance',
-            'total_amount_sanctioned',
-            'total_amount_current',
-            'total_amount_overdue',
-            'last_reporting_date',
-            'credit_history_since_date',
-        ]
+        self.attribute_list = CIBIL_ATTRIBUTE_LIST
         self.data = self.__get_data()
 
     def __get_amount(self, amount_input):
