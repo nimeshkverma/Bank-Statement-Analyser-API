@@ -20,7 +20,7 @@ from tabula import read_pdf
 from django.conf import settings
 
 from common.v1.services.email_service import send_mail
-from CIBIL_constants import CIBIL_ATTRIBUTE_DATA, CIBIL_ATTRIBUTE_LIST
+from CIBIL_constants import CIBIL_ATTRIBUTE_DATA, CIBIL_ATTRIBUTE_LIST, CIBIL_ATTRIBUTES, CIBIL_ATTRIBUTES_CATEGORY_LIST
 
 
 class CIBILReportRawData(object):
@@ -147,7 +147,13 @@ class CIBILReport(object):
         self.cibil_report_path = cibil_report_path
         self.cibil_report_raw = CIBILReportRawData(self.cibil_report_path)
         self.attribute_list = CIBIL_ATTRIBUTE_LIST
-        self.data = self.__get_data()
+        self.data = {
+            "cibil_score_data": {},
+            "loan_accounts_summary_data": {},
+            "loan_enquiry_data": {},
+            "loan_accounts_data": [],
+        }
+        self.__set_data()
 
     def __get_amount(self, amount_input):
         all_amount_list = []
@@ -161,25 +167,14 @@ class CIBILReport(object):
         return all_amount_list[0] if all_amount_list else None
 
     def __get_date(self, date_input):
-        # all_date_list = []
-        # all_string_date_list = re.findall(r'[0-9,\,]+', date_input)
-        # for string_date in all_string_date_list:
-        #     try:
-        #         comma_remove_input_string = string_date.replace(',', '')
-        #         all_date_list.append(int(float(comma_remove_input_string)))
-        #     except Exception as e:
-        #         pass
-        # return all_date_list[0] if all_date_list else None
         return date_input
 
-    def __get_attribute_value_from_cibil_regex(self, attribute):
+    def __get_attribute_value_from_regex(self, attribute_info, text_corpus=None):
+        text_corpus = self.cibil_report_raw.processed_pdf_text if not text_corpus else text_corpus
         attribute_value = None
-        regex_string = CIBIL_ATTRIBUTE_DATA.get(
-            attribute, {}).get('regex')
-        attribute_type = CIBIL_ATTRIBUTE_DATA.get(
-            attribute, {}).get('attribute_type')
-        attribute_value_patterns = re.findall(
-            regex_string, self.cibil_report_raw.processed_pdf_text)
+        regex_string = attribute_info.get('regex')
+        attribute_type = attribute_info.get('attribute_type')
+        attribute_value_patterns = re.findall(regex_string, text_corpus)
         try:
             if attribute_value_patterns:
                 if attribute_type == 'amount':
@@ -194,22 +189,66 @@ class CIBILReport(object):
             pass
         return attribute_value
 
-    def __get_data(self):
-        data = []
-        default_header_dict = {
-            'name': 'Not Found',
-            'value': 'Not Found',
-            'explanation': 'Not Found'
+    def __get_attribute_data(self, attribute_info):
+        value = self.__get_attribute_value_from_regex(attribute_info)
+        attribute_data = {
+            'name': attribute_info.get('name', 'Not Found'),
+            'value': value if value else 'Not Found',
+            'explanation': attribute_info.get('explanation', 'Not Found'),
         }
-        for attribute in self.attribute_list:
-            attribute_data = dict()
-            for header_name in ['name', 'explanation']:
-                attribute_data[header_name] = CIBIL_ATTRIBUTE_DATA.get(
-                    attribute, {}).get(header_name, 'Not Found')
-            value = self.__get_attribute_value_from_cibil_regex(attribute)
-            attribute_data['value'] = value if value else 'Not Found'
-            data.append(attribute_data)
-        return data
+        return attribute_data
+
+    def __set_score_loan_account_summary_enquiry_data(self):
+        for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_data']:
+            for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_data', {}).iteritems():
+                self.data[attribute_category][
+                    attribute_name] = self.__get_attribute_data(attribute_info)
+
+    def __set_loan_accounts_data(self):
+        pass
+
+    def __set_data(self):
+        self.__set_score_loan_account_summary_enquiry_data()
+        self.__set_loan_accounts_data()
+
+    # def __get_attribute_value_from_cibil_regex(self, attribute):
+    #     attribute_value = None
+    #     regex_string = CIBIL_ATTRIBUTE_DATA.get(
+    #         attribute, {}).get('regex')
+    #     attribute_type = CIBIL_ATTRIBUTE_DATA.get(
+    #         attribute, {}).get('attribute_type')
+    #     attribute_value_patterns = re.findall(
+    #         regex_string, self.cibil_report_raw.processed_pdf_text)
+    #     try:
+    #         if attribute_value_patterns:
+    #             if attribute_type == 'amount':
+    #                 attribute_value = self.__get_amount(
+    #                     attribute_value_patterns[0])
+    #             elif attribute_type == 'date':
+    #                 attribute_value = self.__get_date(
+    #                     attribute_value_patterns[0])
+    #             else:
+    #                 attribute_value = attribute_value_patterns[0]
+    #     except Exception as e:
+    #         pass
+    #     return attribute_value
+
+    # def __get_data(self):
+    #     data = []
+    #     default_header_dict = {
+    #         'name': 'Not Found',
+    #         'value': 'Not Found',
+    #         'explanation': 'Not Found'
+    #     }
+    #     for attribute in self.attribute_list:
+    #         attribute_data = dict()
+    #         for header_name in ['name', 'explanation']:
+    #             attribute_data[header_name] = CIBIL_ATTRIBUTE_DATA.get(
+    #                 attribute, {}).get(header_name, 'Not Found')
+    #         value = self.__get_attribute_value_from_cibil_regex(attribute)
+    #         attribute_data['value'] = value if value else 'Not Found'
+    #         data.append(attribute_data)
+    #     return data
 
 
 class CIBILReportTool(object):
@@ -254,10 +293,17 @@ class CIBILReportTool(object):
                                              uuid=uuid.uuid4().hex)
         with open(csv_name, 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(['Attribute Name', 'Value', 'Explanation'])
-            for row_data in self.cibil_data:
-                writer.writerow([row_data['name'], row_data['value'], row_data[
-                                'explanation'] if row_data['explanation'] else ''])
+            for attribute_category in CIBIL_ATTRIBUTES_CATEGORY_LIST:
+                writer.writerow([''])
+                writer.writerow([CIBIL_ATTRIBUTES.get(
+                    attribute_category, {}).get('info')])
+                writer.writerow(
+                    [' ', 'Attribute Name', 'Value', 'Explanation'])
+                for attribute_name in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_list', []):
+                    row_data = self.cibil_data.get(
+                        attribute_category, {}).get(attribute_name, {})
+                    writer.writerow([' ', row_data.get('name', 'Not Found'), row_data.get(
+                        'value', 'Not Found'), row_data.get('name', ' '), ])
         return csv_name
 
     def __remove_file(self, file_path):
