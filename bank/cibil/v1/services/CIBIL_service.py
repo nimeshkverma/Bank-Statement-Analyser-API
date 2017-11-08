@@ -20,7 +20,7 @@ from tabula import read_pdf
 from django.conf import settings
 
 from common.v1.services.email_service import send_mail
-from CIBIL_constants import CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER
+from CIBIL_constants import CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER, ACCOUNT_SUMMARY_RECTIFIER_SPLITTER
 
 
 class CIBILReportRawData(object):
@@ -194,7 +194,7 @@ class CIBILReport(object):
             attribute_info, text_corpus)
         attribute_data = {
             'name': attribute_info.get('name', 'Not Found'),
-            'value': value if value else 'Not Found',
+            'value': value if value not in [None, '', ' '] else 'Not Found',
             'explanation': attribute_info.get('explanation', 'Not Found'),
         }
         return attribute_data
@@ -205,9 +205,28 @@ class CIBILReport(object):
                 self.data[attribute_category][
                     attribute_name] = self.__get_attribute_data(attribute_info)
 
+    def __get_account_text_list(self):
+        account_text_list = re.split(
+            ACCOUNT_SUMMARY_SPLITTER, self.cibil_report_raw.processed_pdf_text)
+        splitter_list = re.findall(
+            ACCOUNT_SUMMARY_SPLITTER, self.cibil_report_raw.processed_pdf_text)
+        for index in xrange(1, len(account_text_list)):
+            suffix, prefix1, prefix2 = splitter_list[index - 1].split(' ')
+            account_text_list[
+                index - 1] = account_text_list[index - 1] + suffix
+            account_text_list[index] = prefix1 + ' ' + \
+                prefix2 + account_text_list[index]
+            rectifier_split_list = account_text_list[
+                index].split(ACCOUNT_SUMMARY_RECTIFIER_SPLITTER)
+            if len(rectifier_split_list) >= 2:
+                account_text_list[
+                    index - 1] = account_text_list[index - 1] + rectifier_split_list[0]
+                account_text_list[
+                    index] = ACCOUNT_SUMMARY_RECTIFIER_SPLITTER + ''.join(rectifier_split_list[1:])
+        return account_text_list[:-1]
+
     def __set_loan_accounts_data(self):
-        account_text_list = self.cibil_report_raw.processed_pdf_text.split(
-            ACCOUNT_SUMMARY_SPLITTER)
+        account_text_list = self.__get_account_text_list()
         account_text_list = account_text_list[:]
         for account_text in account_text_list:
             account_data = {}
@@ -256,7 +275,6 @@ class CIBILReportTool(object):
         return pwd
 
     def __get_cibil_data(self):
-        print self.cibil_report.data
         return self.cibil_report.data
 
     def __create_cibil_statement_csv(self):
@@ -273,20 +291,19 @@ class CIBILReportTool(object):
                 for attribute_name in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_list', []):
                     row_data = self.cibil_data.get(
                         attribute_category, {}).get(attribute_name, {})
-                    writer.writerow([' ', row_data.get('name', 'Not Found'), row_data.get(
-                        'value', 'Not Found'), row_data.get('name', ' '), ])
+                    writer.writerow([' ', row_data.get('name', 'Not Found'), str(
+                        row_data.get('value', 'Not Found')).upper(), row_data.get('name', ' '), ])
             writer.writerow([''])
             writer.writerow([CIBIL_ATTRIBUTES.get(
                 'loan_accounts_data', {}).get('info')])
             account_no = 1
             for account_data in self.cibil_data.get('loan_accounts_data', []):
-                print account_data
                 writer.writerow(
                     ['', 'Account No, {account_no}'.format(account_no=account_no)])
                 for attribute_name in CIBIL_ATTRIBUTES.get('loan_accounts_data', {}).get('attribute_list', []):
                     row_data = account_data.get(attribute_name, {})
-                    writer.writerow([' ', ' ', row_data.get('name', 'Not Found'), row_data.get(
-                        'value', 'Not Found'), row_data.get('name', ' '), ])
+                    writer.writerow([' ', ' ', row_data.get('name', 'Not Found'), str(
+                        row_data.get('value', 'Not Found')).upper(), row_data.get('name', ' '), ])
                 account_no += 1
 
         return csv_name
