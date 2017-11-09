@@ -2,6 +2,7 @@
 FIRST_ACCOUNT_SUMMARY_RECTIFIER = 'account dates amounts status'
 ACCOUNT_SUMMARY_SPLITTER = r'days past due/asset classification'
 ACCOUNT_SUMMARY_RECTIFIER = r'\(up to 36 months; left to right\)(.*)member name:'
+ENQUIRY_DATA_SPLITTER = 'enquiries:'
 ACCOUNT_DBP_REGEX = r'[a-z,0-9]{3} \d{2}-\d{2}'
 
 CIBIL_ATTRIBUTES = {

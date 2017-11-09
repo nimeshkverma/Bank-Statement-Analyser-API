@@ -22,7 +22,7 @@ from django.conf import settings
 from common.v1.services.email_service import send_mail
 from CIBIL_constants import (CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER,
                              ACCOUNT_SUMMARY_RECTIFIER, FIRST_ACCOUNT_SUMMARY_RECTIFIER,
-                             ACCOUNT_DBP_REGEX)
+                             ACCOUNT_DBP_REGEX, ENQUIRY_DATA_SPLITTER)
 
 
 class CIBILReportRawData(object):
@@ -222,7 +222,8 @@ class CIBILReport(object):
                     index - 1] = account_text_list[index - 1] + account_rectifier_list[0]
                 account_text_list[index] = account_text_list[
                     index].split(account_rectifier_list[0])[-1]
-        account_text_list[-2] = account_text_list[-2] + account_text_list[-1]
+        account_text_list[-2] = account_text_list[-2] + \
+            account_text_list[-1].split(ENQUIRY_DATA_SPLITTER)[0]
         return account_text_list[:-1]
 
     def __set_loan_accounts_data(self):
