@@ -1,5 +1,8 @@
-ACCOUNT_SUMMARY_SPLITTER = r'\d{2}-\d{2} [a-z,0-9,:,\,-]{4,} [a-z,0-9,:,\,-]{4,}'
-ACCOUNT_SUMMARY_RECTIFIER_SPLITTER = 'amounts status'
+# ACCOUNT_SUMMARY_SPLITTER = r'\d{2}-\d{2} [a-z,0-9,:,\,-]{4,} [a-z,0-9,:,\,-]{4,}'
+FIRST_ACCOUNT_SUMMARY_RECTIFIER = 'account dates amounts status'
+ACCOUNT_SUMMARY_SPLITTER = r'days past due/asset classification'
+ACCOUNT_SUMMARY_RECTIFIER = r'\(up to 36 months; left to right\)(.*)member name:'
+ACCOUNT_DBP_REGEX = r'[a-z,0-9]{3} \d{2}-\d{2}'
 
 CIBIL_ATTRIBUTES = {
     'cibil_score_data': {
@@ -257,7 +260,7 @@ CIBIL_ATTRIBUTES = {
                 'attribute_type': 'date'
             },
             'write_off': {
-                'regex': r'written\s*off\s*/\s*settled\s*status:\s*(written-off|[0-9,\,]+)',
+                'regex': r'written\s*off\s*/\s*settled\s*status:\s*(written-off|settled|[0-9,\,]+)',
                 'name': 'Write off or Settled',
                 'explanation': 'Is the Loan Account Written off or Settled',
                 'attribute_type': 'string'
@@ -288,5 +291,33 @@ CIBIL_ATTRIBUTES = {
             },
         },
         'info': 'Loan Accounts Information of the User, Given by CIBIL 2.0 Transunion',
+    },
+    'loan_accounts_dpd_data': {
+        'attribute_list': [
+            'dpd',
+            'dpd_month',
+            'dpd_year',
+        ],
+        'attribute_data': {
+            'dpd': {
+                'regex': r'([a-z,0-9]{3}) \d{2}-\d{2}',
+                'name': 'Days Past Due or The Code',
+                'explanation': 'Number of days past due or the code',
+                'attribute_type': 'string'
+            },
+            'dpd_month': {
+                'regex': r'[a-z,0-9]{3} (\d{2})-\d{2}',
+                'name': 'Month',
+                'explanation': 'Month of the DPD',
+                'attribute_type': 'integer'
+            },
+            'dpd_year': {
+                'regex': r'[a-z,0-9]{3} \d{2}-(\d{2})',
+                'name': 'Year',
+                'explanation': 'Year of the DPD',
+                'attribute_type': 'integer'
+            },
+        },
+        'info': 'CIBIL 2.0 Score of the User, Given by Transunion',
     },
 }

@@ -20,7 +20,9 @@ from tabula import read_pdf
 from django.conf import settings
 
 from common.v1.services.email_service import send_mail
-from CIBIL_constants import CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER, ACCOUNT_SUMMARY_RECTIFIER_SPLITTER
+from CIBIL_constants import (CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER,
+                             ACCOUNT_SUMMARY_RECTIFIER, FIRST_ACCOUNT_SUMMARY_RECTIFIER,
+                             ACCOUNT_DBP_REGEX)
 
 
 class CIBILReportRawData(object):
@@ -146,11 +148,13 @@ class CIBILReport(object):
     def __init__(self, cibil_report_path):
         self.cibil_report_path = cibil_report_path
         self.cibil_report_raw = CIBILReportRawData(self.cibil_report_path)
+        self.account_text_list = self.__get_account_text_list()
         self.data = {
             "cibil_score_data": {},
             "loan_accounts_summary_data": {},
             "loan_enquiry_data": {},
             "loan_accounts_data": [],
+            "loan_accounts_dpd_data": [],
         }
         self.__set_data()
 
@@ -208,26 +212,21 @@ class CIBILReport(object):
     def __get_account_text_list(self):
         account_text_list = re.split(
             ACCOUNT_SUMMARY_SPLITTER, self.cibil_report_raw.processed_pdf_text)
-        splitter_list = re.findall(
-            ACCOUNT_SUMMARY_SPLITTER, self.cibil_report_raw.processed_pdf_text)
-        for index in xrange(1, len(account_text_list)):
-            suffix, prefix1, prefix2 = splitter_list[index - 1].split(' ')
-            account_text_list[
-                index - 1] = account_text_list[index - 1] + suffix
-            account_text_list[index] = prefix1 + ' ' + \
-                prefix2 + account_text_list[index]
-            rectifier_split_list = account_text_list[
-                index].split(ACCOUNT_SUMMARY_RECTIFIER_SPLITTER)
-            if len(rectifier_split_list) >= 2:
+        account_text_list[0] = account_text_list[
+            0].split(FIRST_ACCOUNT_SUMMARY_RECTIFIER)[-1]
+        for index in xrange(1, len(account_text_list) - 1):
+            account_rectifier_list = re.findall(
+                ACCOUNT_SUMMARY_RECTIFIER, account_text_list[index])
+            if account_rectifier_list:
                 account_text_list[
-                    index - 1] = account_text_list[index - 1] + rectifier_split_list[0]
-                account_text_list[
-                    index] = ACCOUNT_SUMMARY_RECTIFIER_SPLITTER + ''.join(rectifier_split_list[1:])
+                    index - 1] = account_text_list[index - 1] + account_rectifier_list[0]
+                account_text_list[index] = account_text_list[
+                    index].split(account_rectifier_list[0])[-1]
+        account_text_list[-2] = account_text_list[-2] + account_text_list[-1]
         return account_text_list[:-1]
 
     def __set_loan_accounts_data(self):
-        account_text_list = self.__get_account_text_list()
-        account_text_list = account_text_list[:]
+        account_text_list = self.account_text_list
         for account_text in account_text_list:
             account_data = {}
             for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get('loan_accounts_data', {}).get('attribute_data', {}).iteritems():
@@ -235,9 +234,22 @@ class CIBILReport(object):
                     attribute_info, account_text)
             self.data['loan_accounts_data'].append(account_data)
 
+    def __set_loan_accounts_dpd_data(self):
+        account_text_list = self.account_text_list
+        for account_text in account_text_list:
+            account_text_dbp_data = {}
+            dpd_text_list = re.findall(ACCOUNT_DBP_REGEX, account_text)
+            for dpd_text in dpd_text_list:
+                account_text_dbp_data[dpd_text] = {}
+                for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get('loan_accounts_dpd_data', {}).get('attribute_data', {}).iteritems():
+                    account_text_dbp_data[dpd_text][
+                        attribute_name] = self.__get_attribute_data(attribute_info, dpd_text)
+            self.data['loan_accounts_dpd_data'].append(account_text_dbp_data)
+
     def __set_data(self):
         self.__set_score_loan_account_summary_enquiry_data()
         self.__set_loan_accounts_data()
+        self.__set_loan_accounts_dpd_data()
 
 
 class CIBILReportTool(object):
@@ -306,6 +318,19 @@ class CIBILReportTool(object):
                         row_data.get('value', 'Not Found')).upper(), row_data.get('name', ' '), ])
                 account_no += 1
 
+            account_no = 1
+            for account_data in self.cibil_data.get('loan_accounts_dpd_data', []):
+                writer.writerow(
+                    ['DPD Data Account wise'])
+                writer.writerow(
+                    ['', 'Account No, {account_no}'.format(account_no=account_no)])
+                writer.writerow(
+                    ['', '', 'DPD Whole Text', 'DPD/Code', 'Month', 'Year'])
+                for dpd_text, dpd_data in account_data.iteritems():
+                    writer.writerow(
+                        ['', '', dpd_text, dpd_data.get('dpd', {}).get('value', 'Not Found'), dpd_data.get(
+                            'dpd_month', {}).get('value', 'Not Found'), dpd_data.get('dpd_year', {}).get('value', 'Not Found')])
+                account_no += 1
         return csv_name
 
     def __remove_file(self, file_path):

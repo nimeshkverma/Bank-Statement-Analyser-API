@@ -22,14 +22,12 @@ class Document(object):
             subprocess_pwd = subprocess.check_output('pwd')
             pwd = subprocess_pwd.split('\n')[0] + self.path_preferance
         except Exception as e:
-            print e, 1000
             pass
         return pwd
 
     def __get_file_path(self):
         file_name = '{pwd}/{uuid}_{file_name}'.format(
             pwd=self.pwd, file_name=self.file_name, uuid=uuid.uuid4().hex)
-        print self.pwd, file_name
         fout = open(file_name, 'wb+')
         file_content = ContentFile(self.file_content.read())
         try:
