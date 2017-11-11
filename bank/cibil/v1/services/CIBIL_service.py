@@ -22,7 +22,9 @@ from django.conf import settings
 from common.v1.services.email_service import send_mail
 from CIBIL_constants import (CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER,
                              ACCOUNT_SUMMARY_RECTIFIER, FIRST_ACCOUNT_SUMMARY_RECTIFIER,
-                             ACCOUNT_DBP_REGEX, ENQUIRY_DATA_SPLITTER)
+                             ACCOUNT_DBP_REGEX, LOAN_ACCOUNT_ENQUIRY_CLEANERS,
+                             LOAN_ACCOUNT_ENQUIRY_STARTER, LOAN_ACCOUNT_ENQUIRY_FINISHER,
+                             LOAN_ACCOUNT_ENQUIRY_AMOUNT_CLEANER)
 
 
 class CIBILReportRawData(object):
@@ -149,12 +151,14 @@ class CIBILReport(object):
         self.cibil_report_path = cibil_report_path
         self.cibil_report_raw = CIBILReportRawData(self.cibil_report_path)
         self.account_text_list = self.__get_account_text_list()
+        self.enquiry_text = self.__get_cleaned_enquiry_text()
         self.data = {
             "cibil_score_data": {},
             "loan_accounts_summary_data": {},
-            "loan_enquiry_data": {},
+            "loan_enquiry_summary_data": {},
             "loan_accounts_data": [],
             "loan_accounts_dpd_data": [],
+            "loan_accounts_enquiry_data": [],
         }
         self.__set_data()
 
@@ -204,7 +208,7 @@ class CIBILReport(object):
         return attribute_data
 
     def __set_score_loan_account_summary_enquiry_data(self):
-        for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_data']:
+        for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_summary_data']:
             for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_data', {}).iteritems():
                 self.data[attribute_category][
                     attribute_name] = self.__get_attribute_data(attribute_info)
@@ -223,11 +227,11 @@ class CIBILReport(object):
                 account_text_list[index] = account_text_list[
                     index].split(account_rectifier_list[0])[-1]
         account_text_list[-2] = account_text_list[-2] + \
-            account_text_list[-1].split(ENQUIRY_DATA_SPLITTER)[0]
+            account_text_list[-1].split(LOAN_ACCOUNT_ENQUIRY_STARTER)[0]
         return account_text_list[:-1]
 
     def __set_loan_accounts_data(self):
-        account_text_list = self.account_text_list
+        account_text_list = self.account_text_list[:-1]
         for account_text in account_text_list:
             account_data = {}
             for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get('loan_accounts_data', {}).get('attribute_data', {}).iteritems():
@@ -247,10 +251,47 @@ class CIBILReport(object):
                         attribute_name] = self.__get_attribute_data(attribute_info, dpd_text)
             self.data['loan_accounts_dpd_data'].append(account_text_dbp_data)
 
+    def __get_cleaned_enquiry_text(self):
+        enquiry_text = self.cibil_report_raw.processed_pdf_text.split(
+            LOAN_ACCOUNT_ENQUIRY_STARTER)[-1].split(LOAN_ACCOUNT_ENQUIRY_FINISHER)[0]
+        for cleaner in LOAN_ACCOUNT_ENQUIRY_CLEANERS.values():
+            enquiry_text = re.sub(cleaner, '', enquiry_text)
+        return enquiry_text
+
+    def __enquiry_attribute_values(self, attribute_name):
+        enquiry_attribute_values = []
+        attribute_regex = CIBIL_ATTRIBUTES.get('loan_accounts_enquiry_data', {}).get(
+            'attribute_data', {}).get(attribute_name, {}).get('regex')
+        if attribute_name == 'enquiry_amount':
+            enquiry_attribute_values = re.findall(attribute_regex, re.sub(
+                LOAN_ACCOUNT_ENQUIRY_AMOUNT_CLEANER, '', self.enquiry_text))
+        else:
+            enquiry_attribute_values = re.findall(
+                attribute_regex, self.enquiry_text)
+        return enquiry_attribute_values
+
+    def __set_loan_accounts_enquiry_data(self):
+        enquiry_data = dict()
+        for attribute_name in CIBIL_ATTRIBUTES.get('loan_accounts_enquiry_data', {}).get('attribute_list', []):
+            enquiry_data[attribute_name] = self.__enquiry_attribute_values(
+                attribute_name)
+        minimum_size = min([len(attribute_data)
+                            for attribute_data in enquiry_data.values()])
+        for index in xrange(0, minimum_size):
+            data = {}
+            for attribute_name in CIBIL_ATTRIBUTES.get('loan_accounts_enquiry_data', {}).get('attribute_list', []):
+                data[attribute_name] = {
+                    'name': CIBIL_ATTRIBUTES['loan_accounts_enquiry_data']['attribute_data'][attribute_name]['name'],
+                    'explanation': CIBIL_ATTRIBUTES['loan_accounts_enquiry_data']['attribute_data'][attribute_name]['explanation'],
+                    'value': enquiry_data[attribute_name][index]
+                }
+            self.data['loan_accounts_enquiry_data'].append(data)
+
     def __set_data(self):
         self.__set_score_loan_account_summary_enquiry_data()
         self.__set_loan_accounts_data()
         self.__set_loan_accounts_dpd_data()
+        self.__set_loan_accounts_enquiry_data()
 
 
 class CIBILReportTool(object):
@@ -295,7 +336,7 @@ class CIBILReportTool(object):
                                              uuid=uuid.uuid4().hex)
         with open(csv_name, 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
-            for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_data']:
+            for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_summary_data']:
                 writer.writerow([''])
                 writer.writerow([CIBIL_ATTRIBUTES.get(
                     attribute_category, {}).get('info')])
@@ -331,6 +372,16 @@ class CIBILReportTool(object):
                     writer.writerow(
                         ['', '', dpd_text, dpd_data.get('dpd', {}).get('value', 'Not Found'), dpd_data.get(
                             'dpd_month', {}).get('value', 'Not Found'), dpd_data.get('dpd_year', {}).get('value', 'Not Found')])
+                account_no += 1
+
+            account_no = 1
+            for enquiry_data in self.cibil_data.get('loan_accounts_enquiry_data', []):
+                writer.writerow(
+                    ['Loan Enquiry Account Wise'])
+                writer.writerow(
+                    ['', 'Account No', 'Date of Enquiry', 'Enquiry Amount', 'Purpose of Enquiry'])
+                writer.writerow(['', '{account_no}'.format(account_no=account_no), enquiry_data['enquiry_date'][
+                                'value'],  enquiry_data['enquiry_amount']['value'], enquiry_data['enquiry_purpose']['value'], ])
                 account_no += 1
         return csv_name
 

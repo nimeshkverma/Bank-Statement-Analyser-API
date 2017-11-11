@@ -1,9 +1,22 @@
-# ACCOUNT_SUMMARY_SPLITTER = r'\d{2}-\d{2} [a-z,0-9,:,\,-]{4,} [a-z,0-9,:,\,-]{4,}'
+
 FIRST_ACCOUNT_SUMMARY_RECTIFIER = 'account dates amounts status'
 ACCOUNT_SUMMARY_SPLITTER = r'days past due/asset classification'
 ACCOUNT_SUMMARY_RECTIFIER = r'\(up to 36 months; left to right\)(.*)member name:'
-ENQUIRY_DATA_SPLITTER = 'enquiries:'
 ACCOUNT_DBP_REGEX = r'[a-z,0-9]{3} \d{2}-\d{2}'
+
+LOAN_ACCOUNT_ENQUIRY_STARTER = 'enquiries:'
+LOAN_ACCOUNT_ENQUIRY_FINISHER = 'end of report on'
+LOAN_ACCOUNT_ENQUIRY_AMOUNT_CLEANER = r'\d{2}-\d{2}-\d{4}'
+
+LOAN_ACCOUNT_ENQUIRY_CLEANERS = {
+    'footer': r'(2016|2017|2018) transunion cibil limited\. \(formerly: credit information bureau \(india\) limited\)\. all rights reserved\. page \d{1,2} of transunion cibil cin : u72300mh2000plc128359 \d{1,2} consumer cir consumer: [a-z,\s]+ member id: nb75031001_1 member reference number:',
+    'header': r'date:\d{2}-\d{2}-\d{4} time: \d{2}:\d{2}:\d{2} control number: [0-9,\,]+',
+    'footer_partial': r'(2016|2017|2018) transunion cibil limited\. \(formerly: credit information bureau \(india\) limited\)\. all rights reserved\. page \d{1,2} of transunion cibil cin : u72300mh2000plc128359',
+    'header_date': r'date:\d{2}-\d{2}-\d{4}',
+    'header_time': r'time: \d{2}:\d{2}:\d{2}',
+    'header_control_number': r'control number: [0-9,\,]+',
+}
+
 
 CIBIL_ATTRIBUTES = {
     'cibil_score_data': {
@@ -83,7 +96,7 @@ CIBIL_ATTRIBUTES = {
         },
         'info': 'Summary of all the Loan accounts of the User',
     },
-    'loan_enquiry_data': {
+    'loan_enquiry_summary_data': {
         'attribute_list': [
             'total_loan_enquiries',
             'total_loan_enquiries_30_days',
@@ -123,7 +136,7 @@ CIBIL_ATTRIBUTES = {
                 'attribute_type': 'date'
             },
         },
-        'info': 'Loan Enquiry made by the Lenders for the User',
+        'info': 'Summary of the Loan Enquiry made by the Lenders for the User',
     },
     'loan_accounts_data': {
         'attribute_list': [
@@ -320,5 +333,33 @@ CIBIL_ATTRIBUTES = {
             },
         },
         'info': 'CIBIL 2.0 Score of the User, Given by Transunion',
+    },
+    'loan_accounts_enquiry_data': {
+        'attribute_list': [
+            'enquiry_date',
+            'enquiry_amount',
+            'enquiry_purpose',
+        ],
+        'attribute_data': {
+            'enquiry_date': {
+                'regex': r'(\d{2}-\d{2}-\d{4})',
+                'name': 'Date of Enquiry',
+                'explanation': 'Date of Enquiry',
+                'attribute_type': 'date'
+            },
+            'enquiry_amount': {
+                'regex': r'([0-9,\,]*\d{1}\,\d{3}|\d{1,3}) ',
+                'name': 'Enquiry Amount',
+                'explanation': 'Enquiry Amount',
+                'attribute_type': 'decimal'
+            },
+            'enquiry_purpose': {
+                'regex': r'(other|[a-z]+ card|[a-z]+ loan)',
+                'name': 'Purpose of Enquiry',
+                'explanation': 'Purpose of Enquiry',
+                'attribute_type': 'string'
+            },
+        },
+        'info': 'Enqiry Data Loan account wise',
     },
 }
