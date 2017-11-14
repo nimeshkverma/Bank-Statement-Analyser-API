@@ -200,12 +200,7 @@ class CIBILReport(object):
         text_corpus = self.cibil_report_raw.processed_pdf_text if not text_corpus else text_corpus
         value = self.__get_attribute_value_from_regex(
             attribute_info, text_corpus)
-        attribute_data = {
-            'name': attribute_info.get('name', 'Not Found'),
-            'value': value if value not in [None, '', ' '] else 'Not Found',
-            'explanation': attribute_info.get('explanation', 'Not Found'),
-        }
-        return attribute_data
+        return value if value not in [None, '', ' '] else 'Not Found'
 
     def __set_score_loan_account_summary_enquiry_data(self):
         for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_summary_data']:
@@ -280,11 +275,7 @@ class CIBILReport(object):
         for index in xrange(0, minimum_size):
             data = {}
             for attribute_name in CIBIL_ATTRIBUTES.get('loan_accounts_enquiry_data', {}).get('attribute_list', []):
-                data[attribute_name] = {
-                    'name': CIBIL_ATTRIBUTES['loan_accounts_enquiry_data']['attribute_data'][attribute_name]['name'],
-                    'explanation': CIBIL_ATTRIBUTES['loan_accounts_enquiry_data']['attribute_data'][attribute_name]['explanation'],
-                    'value': enquiry_data[attribute_name][index]
-                }
+                data[attribute_name] = enquiry_data[attribute_name][index]
             self.data['loan_accounts_enquiry_data'].append(data)
 
     def __set_data(self):
@@ -343,10 +334,12 @@ class CIBILReportTool(object):
                 writer.writerow(
                     [' ', 'Attribute Name', 'Value', 'Explanation'])
                 for attribute_name in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_list', []):
-                    row_data = self.cibil_data.get(
-                        attribute_category, {}).get(attribute_name, {})
-                    writer.writerow([' ', row_data.get('name', 'Not Found'), str(
-                        row_data.get('value', 'Not Found')).upper(), row_data.get('name', ' '), ])
+                    row_data = deepcopy(CIBIL_ATTRIBUTES.get(attribute_category, {}).get(
+                        'attribute_data', {}).get(attribute_name, {}))
+                    row_data['value'] = self.cibil_data.get(
+                        attribute_category, {}).get(attribute_name)
+                    writer.writerow([' ', row_data.get('name', 'Not Found'), str(row_data.get(
+                        'value', 'Not Found')).upper(), row_data.get('explanation', ' '), ])
             writer.writerow([''])
             writer.writerow([CIBIL_ATTRIBUTES.get(
                 'loan_accounts_data', {}).get('info')])
@@ -355,9 +348,11 @@ class CIBILReportTool(object):
                 writer.writerow(
                     ['', 'Account No, {account_no}'.format(account_no=account_no)])
                 for attribute_name in CIBIL_ATTRIBUTES.get('loan_accounts_data', {}).get('attribute_list', []):
-                    row_data = account_data.get(attribute_name, {})
-                    writer.writerow([' ', ' ', row_data.get('name', 'Not Found'), str(
-                        row_data.get('value', 'Not Found')).upper(), row_data.get('name', ' '), ])
+                    row_data = deepcopy(CIBIL_ATTRIBUTES.get('loan_accounts_data', {}).get(
+                        'attribute_data', {}).get(attribute_name, {}))
+                    row_data['value'] = account_data.get(attribute_name)
+                    writer.writerow([' ', row_data.get('name', 'Not Found'), str(row_data.get(
+                        'value', 'Not Found')).upper(), row_data.get('explanation', ' '), ])
                 account_no += 1
 
             account_no = 1
@@ -370,8 +365,7 @@ class CIBILReportTool(object):
                     ['', '', 'DPD Whole Text', 'DPD/Code', 'Month', 'Year'])
                 for dpd_text, dpd_data in account_data.iteritems():
                     writer.writerow(
-                        ['', '', dpd_text, dpd_data.get('dpd', {}).get('value', 'Not Found'), dpd_data.get(
-                            'dpd_month', {}).get('value', 'Not Found'), dpd_data.get('dpd_year', {}).get('value', 'Not Found')])
+                        ['', '', dpd_text, dpd_data.get('dpd', 'Not Found'), dpd_data.get('dpd_month',  'Not Found'), dpd_data.get('dpd_year',  'Not Found')])
                 account_no += 1
 
             account_no = 1
@@ -380,8 +374,8 @@ class CIBILReportTool(object):
                     ['Loan Enquiry Account Wise'])
                 writer.writerow(
                     ['', 'Account No', 'Date of Enquiry', 'Enquiry Amount', 'Purpose of Enquiry'])
-                writer.writerow(['', '{account_no}'.format(account_no=account_no), enquiry_data['enquiry_date'][
-                                'value'],  enquiry_data['enquiry_amount']['value'], enquiry_data['enquiry_purpose']['value'], ])
+                writer.writerow(['', '{account_no}'.format(account_no=account_no), enquiry_data[
+                                'enquiry_date'],  enquiry_data['enquiry_amount'], enquiry_data['enquiry_purpose']])
                 account_no += 1
         return csv_name
 
