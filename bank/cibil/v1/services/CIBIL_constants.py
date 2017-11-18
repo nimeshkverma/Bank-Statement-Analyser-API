@@ -1,4 +1,4 @@
-
+ACCOUNT_SUMMARY_STARTER = 'summary:'
 FIRST_ACCOUNT_SUMMARY_RECTIFIER = 'account dates amounts status'
 ACCOUNT_SUMMARY_SPLITTER = r'days past due/asset classification'
 ACCOUNT_SUMMARY_RECTIFIER = r'\(up to 36 months; left to right\)(.*)member name:'
@@ -7,6 +7,8 @@ ACCOUNT_DBP_REGEX = r'[a-z,0-9]{3} \d{2}-\d{2}'
 LOAN_ACCOUNT_ENQUIRY_STARTER = 'enquiries:'
 LOAN_ACCOUNT_ENQUIRY_FINISHER = 'end of report on'
 LOAN_ACCOUNT_ENQUIRY_AMOUNT_CLEANER = r'\d{2}-\d{2}-\d{4}'
+
+ADDRESS_DATA_SPLITTER = r'address[\(e\)]*:'
 
 LOAN_ACCOUNT_ENQUIRY_CLEANERS = {
     'footer': r'(2016|2017|2018) transunion cibil limited\. \(formerly: credit information bureau \(india\) limited\)\. all rights reserved\. page \d{1,2} of transunion cibil cin : u72300mh2000plc128359 \d{1,2} consumer cir consumer: [a-z,\s]+ member id: nb75031001_1 member reference number:',
@@ -17,11 +19,11 @@ LOAN_ACCOUNT_ENQUIRY_CLEANERS = {
     'header_control_number': r'control number: [0-9,\,]+',
 }
 
-
 CIBIL_ATTRIBUTES = {
     'cibil_score_data': {
         'attribute_list': [
             'cibil_score',
+            'cibil_comments',
         ],
         'attribute_data': {
             'cibil_score': {
@@ -30,8 +32,230 @@ CIBIL_ATTRIBUTES = {
                 'explanation': 'The CIBIL Score of the User',
                 'attribute_type': 'integer'
             },
+            'cibil_comments': {
+                'regex': r'cibil transunion score version 2.0 -1|\d{1,3} (1: [0-9,a-z,:,\.,\s,\,-]+) possible range',
+                'name': 'CIBIL Comments',
+                'explanation': 'The Comments on the customers CIBIL Report',
+                'attribute_type': 'string'
+            },
         },
         'info': 'CIBIL 2.0 Score of the User, Given by Transunion',
+    },
+    'cibil_contact_data': {
+        'attribute_list': [
+            'telephone_type',
+            'telephone_number',
+            'email',
+            'address_category',
+            'address_code',
+            'address_report_date',
+        ],
+        'attribute_data': {
+            'telephone_email_data': {
+                'regex': r'(telephone type .* address\(es\):)',
+                'name': 'Telephone Data',
+                'explanation': 'Telephone Data',
+                'attribute_type': 'string'
+            },
+            'telephone_type': {
+                'regex': r'[a-z]+ phone[\(e\)]* |not classified[\(e\)]* telephone number',
+                'name': 'Telephone Number Type',
+                'explanation': 'Telephone Number Type',
+                'attribute_type': 'string'
+            },
+            'telephone_number': {
+                'regex': r' (\d{8,15})',
+                'name': 'Telephone Number',
+                'explanation': 'Telephone Number',
+                'attribute_type': 'string'
+            },
+            'email': {
+                'regex': r'(\b[\w.-]+?@\w+?\.\w+?\b)',
+                'name': 'Email',
+                'explanation': 'Email of the User',
+                'attribute_type': 'string'
+            },
+            'address_data': {
+                'regex': r'(address\(es\): .* employment information\s*:)',
+                'name': 'Telephone Number',
+                'explanation': 'Telephone Number',
+                'attribute_type': 'string'
+            },
+            'address_category': {
+                'regex': r'category:([a-z]+ [a-z]+)',
+                'name': 'Address Category',
+                'explanation': 'Address Category',
+                'attribute_type': 'string'
+            },
+            'address_code': {
+                'regex': r'residence code:([a-z,0-9]*)',
+                'name': 'Address Code',
+                'explanation': 'Address Code',
+                'attribute_type': 'string'
+            },
+            'address_report_date': {
+                'regex': r'date reported:(\d{2}-\d{2}-\d{4})',
+                'name': 'Address Report Date',
+                'explanation': 'Address Report Date',
+                'attribute_type': 'date'
+            },
+
+        },
+        'info': 'Contact data of the User',
+    },
+    'cibil_kyc_data': {
+        'attribute_list': [
+            'name',
+            'birth_date',
+            'gender',
+            'pan',
+            'pan_issue_date',
+            'pan_expiry_date',
+            'aadhaar',
+            'aadhaar_issue_date',
+            'aadhaar_expiry_date',
+            'driving_license',
+            'driving_license_issue_date',
+            'driving_license_expiry_date',
+            'passport_number',
+            'passport_number_issue_date',
+            'passport_number_expiry_date',
+            'voter_id',
+            'voter_id_issue_date',
+            'voter_id_expiry_date',
+            'ration_card',
+            'ration_card_issue_date',
+            'ration_card_expiry_date',
+        ],
+        'attribute_data': {
+            'name': {
+                'regex': r'consumer information: name:([a-z,0-9,/,-,:,\s]+) date of birth: \d{2}-\d{2}-\d{4}',
+                'name': 'Customer Name',
+                'explanation': 'The name of the User',
+                'attribute_type': 'string'
+            },
+            'birth_date': {
+                'regex': r'consumer information: name:[a-z,0-9,/,-,:,\s]+ date of birth: (\d{2}-\d{2}-\d{4})',
+                'name': 'Birth Date',
+                'explanation': 'Birth date of the User',
+                'attribute_type': 'date'
+            },
+            'gender': {
+                'regex': r'gender\s*:\s*([a-z]+)',
+                'name': 'Gender',
+                'explanation': 'Gender of the User',
+                'attribute_type': 'string'
+            },
+            'pan': {
+                'regex': r'income tax id number \(pan\) ([a-z]{5}\d{4}[a-z]{1}) ',
+                'name': 'PAN',
+                'explanation': 'PAN of the User',
+                'attribute_type': 'string'
+            },
+            'pan_issue_date': {
+                'regex': r'income tax id number \(pan\) [a-z]{5}\d{4}[a-z]{1} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'PAN Issue date',
+                'explanation': 'PAN Issue date of the User',
+                'attribute_type': 'date'
+            },
+            'pan_expiry_date': {
+                'regex': r'income tax id number \(pan\) [a-z]{5}\d{4}[a-z]{1} \d{2}-\d{2}-\d{4} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'PAN Expiry date',
+                'explanation': 'PAN Expiry date of the User',
+                'attribute_type': 'date'
+            },
+            'aadhaar': {
+                'regex': r'universal id number \(uid\) (\d{12})',
+                'name': 'AADHAAR',
+                'explanation': 'AADHAAR of the User',
+                'attribute_type': 'string'
+            },
+            'aadhaar_issue_date': {
+                'regex': r'universal id number \(uid\) \d{12} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'AADHAAR Issue date',
+                'explanation': 'AADHAAR Issue date of the User',
+                'attribute_type': 'date'
+            },
+            'aadhaar_expiry_date': {
+                'regex': r'universal id number \(uid\) \d{12} \d{2}-\d{2}-\d{4} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'AADHAAR Expiry date',
+                'explanation': 'AADHAAR Expiry date of the User',
+                'attribute_type': 'date'
+            },
+            'driving_license': {
+                'regex': r'driver\'s license number[\(e\)]* ([a-z,0-9,/,-]+[0-9,\s]+) ',
+                'name': 'Driving License',
+                'explanation': 'Driving License of the User',
+                'attribute_type': 'string'
+            },
+            'driving_license_issue_date': {
+                'regex': r'driver\'s license number[\(e\)]* [a-z,0-9,/,-]+[0-9,\s]+ (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Driving License Issue date',
+                'explanation': 'Driving License Issue date of the User',
+                'attribute_type': 'date'
+            },
+            'driving_license_expiry_date': {
+                'regex': r'driver\'s license number[\(e\)]* [a-z,0-9,/,-]+[0-9,\s]+ \d{2}-\d{2}-\d{4} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Driving License Expiry date',
+                'explanation': 'Driving License Expiry date of the User',
+                'attribute_type': 'date'
+            },
+            'passport_number': {
+                'regex': r'passport number[\(e\)]* ([a-z,0-9]+) ',
+                'name': 'Passport Number',
+                'explanation': 'Passport Number of the User',
+                'attribute_type': 'string'
+            },
+            'passport_number_issue_date': {
+                'regex': r'passport number[\(e\)]* [a-z,0-9]+ (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Passport Number Issue date',
+                'explanation': 'Passport Number Issue date of the User',
+                'attribute_type': 'date'
+            },
+            'passport_number_expiry_date': {
+                'regex': r'passport number[\(e\)]* [a-z,0-9]+ \d{2}-\d{2}-\d{4} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Passport Number Expiry date',
+                'explanation': 'Passport Number Expiry date of the User',
+                'attribute_type': 'date'
+            },
+            'voter_id': {
+                'regex': r'voter id number[\(e\)]* ([a-z,0-9]+) ',
+                'name': 'Voter Id',
+                'explanation': 'Voter Id of the User',
+                'attribute_type': 'string'
+            },
+            'voter_id_issue_date': {
+                'regex': r'voter id number[\(e\)]* [a-z,0-9]+ (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Voter Id Issue date',
+                'explanation': 'Voter Id Issue date of the User',
+                'attribute_type': 'date'
+            },
+            'voter_id_expiry_date': {
+                'regex': r'voter id number[\(e\)]* [a-z,0-9]+ \d{2}-\d{2}-\d{4} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Voter Id Expiry date',
+                'explanation': 'Voter Id Expiry date of the User',
+                'attribute_type': 'date'
+            },
+            'ration_card': {
+                'regex': r'ration card number[\(e\)]* (\d+) ',
+                'name': 'Ration Card',
+                'explanation': 'Ration Card of the User',
+                'attribute_type': 'string'
+            },
+            'ration_card_issue_date': {
+                'regex': r'ration card number[\(e\)]* \d+ (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Ration Card Issue date',
+                'explanation': 'Ration Card Issue date of the User',
+                'attribute_type': 'date'
+            },
+            'ration_card_expiry_date': {
+                'regex': r'ration card number[\(e\)]* \d+ \d{2}-\d{2}-\d{4} (\d{2}-\d{2}-\d{4}) ',
+                'name': 'Ration Card Expiry date',
+                'explanation': 'Ration Card Expiry date of the User',
+                'attribute_type': 'date'
+            },
+        },
+        'info': 'KYC data obtained from CIBIL 2.0 Report, Given by Transunion',
     },
     'loan_accounts_summary_data': {
         'attribute_list': [

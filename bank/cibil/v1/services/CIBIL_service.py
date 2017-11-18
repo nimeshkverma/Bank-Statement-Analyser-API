@@ -24,7 +24,8 @@ from CIBIL_constants import (CIBIL_ATTRIBUTES, ACCOUNT_SUMMARY_SPLITTER,
                              ACCOUNT_SUMMARY_RECTIFIER, FIRST_ACCOUNT_SUMMARY_RECTIFIER,
                              ACCOUNT_DBP_REGEX, LOAN_ACCOUNT_ENQUIRY_CLEANERS,
                              LOAN_ACCOUNT_ENQUIRY_STARTER, LOAN_ACCOUNT_ENQUIRY_FINISHER,
-                             LOAN_ACCOUNT_ENQUIRY_AMOUNT_CLEANER)
+                             LOAN_ACCOUNT_ENQUIRY_AMOUNT_CLEANER,
+                             ACCOUNT_SUMMARY_STARTER, ADDRESS_DATA_SPLITTER)
 
 
 class CIBILReportRawData(object):
@@ -48,7 +49,7 @@ class CIBILReportRawData(object):
         self.processed_pdf_text = self.__processed_pdf_text()
 
     def __processed_pdf_text(self):
-        pdf_text_unicode = unicode(self.pdf_text, "utf-8")
+        pdf_text_unicode = unicode(self.pdf_text, 'utf-8')
         pdf_text_fixed = unicodedata.normalize(
             'NFKD', pdf_text_unicode).encode('ascii', 'ignore')
         return' '.join(pdf_text_fixed.lower().split())
@@ -58,7 +59,7 @@ class CIBILReportRawData(object):
             return self.tabula_params
         elif password_type == 'empty':
             tabula_params = deepcopy(self.tabula_params)
-            tabula_params['password'] = ""
+            tabula_params['password'] = ''
             return tabula_params
         elif password_type == 'capilatized':
             tabula_params = deepcopy(self.tabula_params)
@@ -152,13 +153,16 @@ class CIBILReport(object):
         self.cibil_report_raw = CIBILReportRawData(self.cibil_report_path)
         self.account_text_list = self.__get_account_text_list()
         self.enquiry_text = self.__get_cleaned_enquiry_text()
+        self.pre_summary_text = self.__get_pre_summary_text()
         self.data = {
-            "cibil_score_data": {},
-            "loan_accounts_summary_data": {},
-            "loan_enquiry_summary_data": {},
-            "loan_accounts_data": [],
-            "loan_accounts_dpd_data": [],
-            "loan_accounts_enquiry_data": [],
+            'cibil_score_data': {},
+            'cibil_kyc_data': {},
+            'cibil_contact_data': {},
+            'loan_accounts_summary_data': {},
+            'loan_enquiry_summary_data': {},
+            'loan_accounts_data': [],
+            'loan_accounts_dpd_data': [],
+            'loan_accounts_enquiry_data': [],
         }
         self.__set_data()
 
@@ -175,6 +179,23 @@ class CIBILReport(object):
 
     def __get_date(self, date_input):
         return date_input
+
+    def __get_account_text_list(self):
+        account_text_list = re.split(
+            ACCOUNT_SUMMARY_SPLITTER, self.cibil_report_raw.processed_pdf_text)
+        account_text_list[0] = account_text_list[
+            0].split(FIRST_ACCOUNT_SUMMARY_RECTIFIER)[-1]
+        for index in xrange(1, len(account_text_list) - 1):
+            account_rectifier_list = re.findall(
+                ACCOUNT_SUMMARY_RECTIFIER, account_text_list[index])
+            if account_rectifier_list:
+                account_text_list[
+                    index - 1] = account_text_list[index - 1] + account_rectifier_list[0]
+                account_text_list[index] = account_text_list[
+                    index].split(account_rectifier_list[0])[-1]
+        account_text_list[-2] = account_text_list[-2] + \
+            account_text_list[-1].split(LOAN_ACCOUNT_ENQUIRY_STARTER)[0]
+        return account_text_list[:-1]
 
     def __get_attribute_value_from_regex(self, attribute_info, text_corpus=None):
         text_corpus = self.cibil_report_raw.processed_pdf_text if not text_corpus else text_corpus
@@ -202,28 +223,63 @@ class CIBILReport(object):
             attribute_info, text_corpus)
         return value if value not in [None, '', ' '] else 'Not Found'
 
-    def __set_score_loan_account_summary_enquiry_data(self):
-        for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_summary_data']:
+    def __set_cibil_score_kyc_data(self):
+        for attribute_category in ['cibil_score_data', 'cibil_kyc_data']:
+            for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_data', {}).iteritems():
+                self.data[attribute_category][
+                    attribute_name] = self.__get_attribute_data(attribute_info, self.pre_summary_text)
+
+    def __set_telephone_email_data(self):
+        telephone_data = []
+        email_data = []
+        telephone_email_data_text_list = re.findall(CIBIL_ATTRIBUTES.get('cibil_contact_data', {}).get(
+            'attribute_data', {}).get('telephone_email_data', {}).get('regex', ''), self.pre_summary_text)
+        if telephone_email_data_text_list:
+            telephone_type_list = re.findall(CIBIL_ATTRIBUTES.get('cibil_contact_data', {}).get(
+                'attribute_data', {}).get('telephone_type', {}).get('regex', ''), telephone_email_data_text_list[0])
+            telephone_number_list = re.findall(CIBIL_ATTRIBUTES.get('cibil_contact_data', {}).get(
+                'attribute_data', {}).get('telephone_number', {}).get('regex', ''), telephone_email_data_text_list[0])
+            email_data = re.findall(CIBIL_ATTRIBUTES.get('cibil_contact_data', {}).get(
+                'attribute_data', {}).get('email', {}).get('regex', ''), telephone_email_data_text_list[0])
+            for index in xrange(0, min(len(telephone_type_list), len(telephone_number_list))):
+                telephone_data.append({
+                    'telephone_type': telephone_type_list[index],
+                    'telephone_number': telephone_number_list[index],
+                })
+        self.data['cibil_contact_data']['telephone_data'] = telephone_data
+        self.data['cibil_contact_data']['email_data'] = [
+            {'email': email} for email in email_data]
+
+    def __set_address_data(self):
+        address_data_list = []
+        address_data_text_corpus_list = re.findall(CIBIL_ATTRIBUTES.get('cibil_contact_data', {}).get(
+            'attribute_data', {}).get('address_data', {}).get('regex', ''), self.pre_summary_text)
+        if address_data_text_corpus_list:
+            address_data_text_list = re.split(
+                ADDRESS_DATA_SPLITTER, address_data_text_corpus_list[0])
+            for address_data_text in address_data_text_list:
+                address_data = {}
+                address = deepcopy(address_data_text)
+                for attribute_name in ['address_category', 'address_code', 'address_report_date']:
+                    attribute_info = CIBIL_ATTRIBUTES.get(
+                        'cibil_contact_data', {}).get('attribute_data', {}).get(attribute_name, {})
+                    address_data[attribute_name] = self.__get_attribute_data(
+                        attribute_info, address_data_text)
+                    address = re.sub(attribute_info.get(
+                        'regex', ''), '', address)
+                address_data['address'] = address
+                address_data_list.append(address_data)
+        self.data['cibil_contact_data']['address_data'] = address_data_list
+
+    def __set_cibil_contact_data(self):
+        self.__set_telephone_email_data()
+        self.__set_address_data()
+
+    def __set_loan_account_summary_enquiry_data(self):
+        for attribute_category in ['loan_accounts_summary_data', 'loan_enquiry_summary_data']:
             for attribute_name, attribute_info in CIBIL_ATTRIBUTES.get(attribute_category, {}).get('attribute_data', {}).iteritems():
                 self.data[attribute_category][
                     attribute_name] = self.__get_attribute_data(attribute_info)
-
-    def __get_account_text_list(self):
-        account_text_list = re.split(
-            ACCOUNT_SUMMARY_SPLITTER, self.cibil_report_raw.processed_pdf_text)
-        account_text_list[0] = account_text_list[
-            0].split(FIRST_ACCOUNT_SUMMARY_RECTIFIER)[-1]
-        for index in xrange(1, len(account_text_list) - 1):
-            account_rectifier_list = re.findall(
-                ACCOUNT_SUMMARY_RECTIFIER, account_text_list[index])
-            if account_rectifier_list:
-                account_text_list[
-                    index - 1] = account_text_list[index - 1] + account_rectifier_list[0]
-                account_text_list[index] = account_text_list[
-                    index].split(account_rectifier_list[0])[-1]
-        account_text_list[-2] = account_text_list[-2] + \
-            account_text_list[-1].split(LOAN_ACCOUNT_ENQUIRY_STARTER)[0]
-        return account_text_list[:-1]
 
     def __set_loan_accounts_data(self):
         account_text_list = self.account_text_list[:-1]
@@ -245,6 +301,14 @@ class CIBILReport(object):
                     account_text_dbp_data[dpd_text][
                         attribute_name] = self.__get_attribute_data(attribute_info, dpd_text)
             self.data['loan_accounts_dpd_data'].append(account_text_dbp_data)
+
+    def __get_pre_summary_text(self):
+        summary_text = ''
+        summary_text_list = self.cibil_report_raw.processed_pdf_text.split(
+            ACCOUNT_SUMMARY_STARTER)
+        if summary_text_list:
+            summary_text = re.sub('\(cid:\d{1,4}\)', '', summary_text_list[0])
+        return summary_text
 
     def __get_cleaned_enquiry_text(self):
         enquiry_text = self.cibil_report_raw.processed_pdf_text.split(
@@ -279,7 +343,9 @@ class CIBILReport(object):
             self.data['loan_accounts_enquiry_data'].append(data)
 
     def __set_data(self):
-        self.__set_score_loan_account_summary_enquiry_data()
+        self.__set_cibil_score_kyc_data()
+        self.__set_loan_account_summary_enquiry_data()
+        self.__set_cibil_contact_data()
         self.__set_loan_accounts_data()
         self.__set_loan_accounts_dpd_data()
         self.__set_loan_accounts_enquiry_data()
@@ -327,7 +393,7 @@ class CIBILReportTool(object):
                                              uuid=uuid.uuid4().hex)
         with open(csv_name, 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
-            for attribute_category in ['cibil_score_data', 'loan_accounts_summary_data', 'loan_enquiry_summary_data']:
+            for attribute_category in ['cibil_score_data', 'cibil_kyc_data', 'loan_accounts_summary_data', 'loan_enquiry_summary_data']:
                 writer.writerow([''])
                 writer.writerow([CIBIL_ATTRIBUTES.get(
                     attribute_category, {}).get('info')])
@@ -355,10 +421,9 @@ class CIBILReportTool(object):
                         'value', 'Not Found')).upper(), row_data.get('explanation', ' '), ])
                 account_no += 1
 
+            writer.writerow(['DPD Data Account wise'])
             account_no = 1
             for account_data in self.cibil_data.get('loan_accounts_dpd_data', []):
-                writer.writerow(
-                    ['DPD Data Account wise'])
                 writer.writerow(
                     ['', 'Account No, {account_no}'.format(account_no=account_no)])
                 writer.writerow(
@@ -368,15 +433,43 @@ class CIBILReportTool(object):
                         ['', '', dpd_text, dpd_data.get('dpd', 'Not Found'), dpd_data.get('dpd_month',  'Not Found'), dpd_data.get('dpd_year',  'Not Found')])
                 account_no += 1
 
+            writer.writerow(['Loan Enquiry Account Wise'])
             account_no = 1
+            writer.writerow(['Loan Enquiry Account Wise'])
             for enquiry_data in self.cibil_data.get('loan_accounts_enquiry_data', []):
-                writer.writerow(
-                    ['Loan Enquiry Account Wise'])
                 writer.writerow(
                     ['', 'Account No', 'Date of Enquiry', 'Enquiry Amount', 'Purpose of Enquiry'])
                 writer.writerow(['', '{account_no}'.format(account_no=account_no), enquiry_data[
                                 'enquiry_date'],  enquiry_data['enquiry_amount'], enquiry_data['enquiry_purpose']])
                 account_no += 1
+
+            writer.writerow(['Contact Data'])
+            writer.writerow(['', 'Address Info'])
+            writer.writerow(['', '', 'Sr No', 'Address Code',
+                             'Address Category', 'Address Reported Date', 'Address'])
+            sr_no = 1
+            for address_data in self.cibil_data.get('cibil_contact_data', {}).get('address_data', []):
+                writer.writerow(['', '', sr_no, address_data.get('address_code', 'Not Found'), address_data.get(
+                    'address_category', 'Not Found'), address_data.get('address_report_date', 'Not Found'), address_data.get('address', 'Not Found')])
+                sr_no += 1
+
+            writer.writerow(['', 'Email Info'])
+            writer.writerow(['', '', 'Sr No', 'Email'])
+            sr_no = 1
+            for email_data in self.cibil_data.get('cibil_contact_data', {}).get('email_data', []):
+                writer.writerow(
+                    ['', '', sr_no, email_data.get('email', 'Not Found')])
+                sr_no += 1
+
+            writer.writerow(['', 'Telephone Info'])
+            writer.writerow(
+                ['', '', 'Sr No', 'Telephone Type', 'Telephone No'])
+            sr_no = 1
+            for telephone_data in self.cibil_data.get('cibil_contact_data', {}).get('telephone_data', []):
+                writer.writerow(['', '', sr_no, telephone_data.get(
+                    'telephone_type', 'Not Found'), telephone_data.get('telephone_number', 'Not Found')])
+                sr_no += 1
+
         return csv_name
 
     def __remove_file(self, file_path):
