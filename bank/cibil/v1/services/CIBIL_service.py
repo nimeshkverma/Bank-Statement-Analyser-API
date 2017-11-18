@@ -436,9 +436,9 @@ class CIBILReportTool(object):
             writer.writerow(['Loan Enquiry Account Wise'])
             account_no = 1
             writer.writerow(['Loan Enquiry Account Wise'])
+            writer.writerow(['', 'Account No', 'Date of Enquiry',
+                             'Enquiry Amount', 'Purpose of Enquiry'])
             for enquiry_data in self.cibil_data.get('loan_accounts_enquiry_data', []):
-                writer.writerow(
-                    ['', 'Account No', 'Date of Enquiry', 'Enquiry Amount', 'Purpose of Enquiry'])
                 writer.writerow(['', '{account_no}'.format(account_no=account_no), enquiry_data[
                                 'enquiry_date'],  enquiry_data['enquiry_amount'], enquiry_data['enquiry_purpose']])
                 account_no += 1
