@@ -349,6 +349,7 @@ class CIBILReport(object):
         self.__set_loan_accounts_data()
         self.__set_loan_accounts_dpd_data()
         self.__set_loan_accounts_enquiry_data()
+        # print self.data
 
 
 class CIBILReportTool(object):
@@ -492,3 +493,371 @@ class CIBILReportTool(object):
         }
         send_mail(email_details, self.template, [csvfile])
         self.__remove_file(csvfile)
+
+
+class CIBILAnalysisTool(object):
+
+    def __init__(self, cibil_data, report_unique_identifier):
+        self.cibil_data = cibil_data
+        self.report_unique_identifier = report_unique_identifier
+        self.cibil_analysed_data = {
+            'loan_accounts_summary_data': {},
+            'loan_enquiry_summary_data': {},
+            'loan_accounts_enquiry_data': {},
+        }
+        self.__set_cibil_analysed_data()
+        # print self.cibil_analysed_data
+        self.template = 'cibil/v1/cibil_report_analysed_data.html'
+        self.pwd = self.__pwd()
+
+    def __get_amount(self, number):
+        if type(number) == str:
+            comma_remove_number = number.replace(',', '')
+            try:
+                return int(float(comma_remove_number))
+            except Exception as e:
+                return 0
+        else:
+            return number
+
+    def __set_loan_accounts_summary_data(self):
+        source_data = self.cibil_data['loan_accounts_summary_data']
+
+        def __existing_emi_estimate(source_data):
+            return self.__get_amount(source_data.get('total_amount_current', 0)) * 0.03
+
+        def __credit_history_years(source_data):
+            credit_history_years = 0
+            try:
+                credit_history_years = datetime.datetime.now().year - datetime.datetime.strptime(
+                    source_data.get('credit_history_since_date', ''), '%d-%m-%Y').year
+            except Exception as e:
+                pass
+            return credit_history_years
+
+        def __overdue_vs_current_liability(source_data):
+            total_amount_current = self.__get_amount(source_data.get(
+                'total_amount_current', 1)) if source_data.get('total_amount_current', 1) else 1
+            return self.__get_amount(source_data.get('total_amount_overdue', 0)) * 1.0 / total_amount_current
+
+        def __debt_reduction(source_data):
+            total_amount_sanctioned = self.__get_amount(source_data.get(
+                'total_amount_sanctioned', 1)) if source_data.get('total_amount_sanctioned', 1) else 1
+            return 1 - (self.__get_amount(source_data.get('total_amount_current', 0)) * 1.0 / total_amount_sanctioned)
+
+        self.cibil_analysed_data['loan_accounts_summary_data'] = {
+            'existing_emi_estimate': __existing_emi_estimate(source_data),
+            'credit_history_years': __credit_history_years(source_data),
+            'overdue_vs_current_liability': __overdue_vs_current_liability(source_data),
+            'debt_reduction': __debt_reduction(source_data),
+        }
+# Date of Last 10th Enquiry
+# Date of Last 5th Enquiry
+# Date of Last 3rd Enquiry
+# Date of Last Enquiry
+# Average Amount of Last 5 Enquiries
+# Average Amount of Last 10 Enquiries
+# Average Amount of Last 5 Enquiries - Personal Loan Only
+# Average Amount of Last 10 Enquiries - Personal Loan Only
+# Average Amount of Last 5 Enquiries - Personal Loan & Credit Card Only
+# Average Amount of Last 10 Enquiries - Personal Loan & Credit Card Only
+
+#     'loan_accounts_enquiry_data': [{
+#         'enquiry_amount': '1',
+#         'enquiry_date': '03-08-2017',
+#         'enquiry_purpose': 'personal loan'
+#     },]
+    def __set_loan_enquiry_summary_data(self):
+        source_data = self.cibil_data['loan_enquiry_summary_data']
+
+        def __average_enquiries(source_data):
+            return self.__get_amount(source_data.get('total_loan_enquiries_12_months')) * 1.0 / 12
+        self.cibil_analysed_data['loan_enquiry_summary_data'] = {
+            'average_enquiries': __average_enquiries(source_data)
+        }
+
+    def __set_loan_accounts_enquiry_data(self):
+        source_data = self.cibil_data['loan_accounts_enquiry_data']
+
+        def __datewise_all_data_dict(source_data):
+            datewise_all_data_dict = {}
+            for data_dict in source_data:
+                try:
+                    enquiry_date = datetime.datetime.strptime(
+                        data_dict.get('enquiry_date', ''), '%d-%m-%Y')
+                    if datewise_all_data_dict.get(enquiry_date):
+                        datewise_all_data_dict[enquiry_date].apend(data_dict)
+                    else:
+                        datewise_all_data_dict[enquiry_date] = [data_dict]
+                except Exception as e:
+                    pass
+            return datewise_all_data_dict
+
+        def __datewise_all_data_list(datewise_all_data_dict):
+            datewise_all_data_dict_key = datewise_all_data_dict.keys()
+            datewise_all_data_dict_key.sort()
+            datewise_all_data_list = []
+            for key in datewise_all_data_dict_key:
+                datewise_all_data_list = datewise_all_data_list + \
+                    datewise_all_data_dict[key]
+            return datewise_all_data_list
+        datewise_all_data_dict = __datewise_all_data_dict(source_data)
+        datewise_all_data_list = __datewise_all_data_list(
+            datewise_all_data_dict)
+
+        def __nth_enquiry_date(n, datewise_all_data_list):
+            nth_enquiry_date = ''
+            if len(datewise_all_data_list) >= n:
+                # print 100, n
+                nth_enquiry_date = datewise_all_data_list[
+                    n - 1]['enquiry_date']
+            return nth_enquiry_date
+
+        def __nth_enquiry_average_amount(n, datewise_all_data_list, enquiry_type_list=None):
+            nth_enquiry_amount_sum = 0
+            counter = 0
+            for index in xrange(0, len(datewise_all_data_list)):
+                if not enquiry_type_list:
+                    # print datewise_all_data_list[index],
+                    # nth_enquiry_amount_sum, 'all'
+                    counter += 1
+                    nth_enquiry_amount_sum += self.__get_amount(
+                        datewise_all_data_list[index]['enquiry_amount'])
+                else:
+                    if datewise_all_data_list[index]['enquiry_purpose'] in enquiry_type_list:
+                        # print datewise_all_data_list[index],
+                        # nth_enquiry_amount_sum,
+                        counter += 1
+                        nth_enquiry_amount_sum += self.__get_amount(
+                            datewise_all_data_list[index]['enquiry_amount'])
+                if counter == n:
+                    break
+            return nth_enquiry_amount_sum * 1.0 / n
+
+        self.cibil_analysed_data['loan_accounts_enquiry_data'] = {
+            'enquiry_date_1th': __nth_enquiry_date(1, datewise_all_data_list),
+            'enquiry_date_3th': __nth_enquiry_date(3, datewise_all_data_list),
+            'enquiry_date_5th': __nth_enquiry_date(5, datewise_all_data_list),
+            'enquiry_date_10th': __nth_enquiry_date(10, datewise_all_data_list),
+            'average_enquiry_amount_all_5': __nth_enquiry_average_amount(5, datewise_all_data_list),
+            'average_enquiry_amount_all_10': __nth_enquiry_average_amount(10, datewise_all_data_list),
+            'average_enquiry_amount_all_5_personal': __nth_enquiry_average_amount(5, datewise_all_data_list, ['personal loan']),
+            'average_enquiry_amount_all_10_personal': __nth_enquiry_average_amount(10, datewise_all_data_list, ['personal loan']),
+            'average_enquiry_amount_all_5_personal_and_creditcard': __nth_enquiry_average_amount(5, datewise_all_data_list, ['personal loan', 'credit card']),
+            'average_enquiry_amount_all_10_personal_and_creditcard': __nth_enquiry_average_amount(10, datewise_all_data_list, ['personal loan', 'credit card']),
+        }
+        # print self.cibil_analysed_data
+
+    def __set_cibil_analysed_data(self):
+        self.__set_loan_accounts_summary_data()
+        self.__set_loan_enquiry_summary_data()
+        self.__set_loan_accounts_enquiry_data()
+
+    def __pwd(self):
+        pwd = ''
+        try:
+            subprocess_pwd = subprocess.check_output('pwd')
+            pwd = subprocess_pwd.split('\n')[0] + '/cibil/v1/services'
+        except Exception as e:
+            pass
+        return pwd
+
+    def __create_cibil_statement_csv(self):
+        csv_name = "{pwd}/{uuid}.csv".format(pwd=self.pwd,
+                                             uuid=uuid.uuid4().hex)
+        with open(csv_name, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(['Section', 'Attribute', 'Value'])
+            for attribute_category in ['loan_accounts_summary_data', 'loan_enquiry_summary_data', 'loan_accounts_enquiry_data']:
+                writer.writerow([attribute_category])
+                for key, value in self.cibil_analysed_data.get(attribute_category, {}).iteritems():
+                    writer.writerow(['', key, value])
+
+        return csv_name
+
+    def __remove_file(self, file_path):
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    def send_cibil_analysed_data_email(self):
+        csvfile = self.__create_cibil_statement_csv()
+        email_data = {
+            'data': {
+                'report_unique_identifier': self.report_unique_identifier,
+            }
+        }
+        email_details = {
+            'data': email_data,
+            'subject': "CIBIL Report Analysed Data for :{report_unique_identifier} ".format(report_unique_identifier=self.report_unique_identifier),
+            'body': "Empty",
+            'sender_email_id': settings.SERVER_EMAIL,
+            'reciever_email_ids': settings.RECIEVER_EMAILS,
+        }
+        send_mail(email_details, self.template, [csvfile])
+        self.__remove_file(csvfile)
+
+
+# class CIBILTablePopulation(object):
+
+#     def __init__(self, customer_id, cibil_data):
+#         self.customer_id = customer_id
+#         self.cibil_data = cibil_data
+#         self.__cibil_loan_accounts_summary_query()
+#         self.__cibil_loan_accounts_enquiry_query()
+#         self.__cibil_loan_accounts_enquiry_summary_query()
+#         self.__cibil_contact_address_query()
+#         self.__cibil_contact_query()
+#         self.__cibil_data_query()
+
+#     def __clean_data_dict(self, data_dict):
+#         for key, value in data_dict.iteritems():
+#             data_dict[key] = '-9999' if value in [
+#                 None, '', ' ', 'Not Found'] else value
+#         return data_dict
+
+#     def __change_date_format(self, data_dict, key_list):
+#         for key in key_list:
+#             try:
+#                 data_dict[key] = "'" + datetime.datetime.strptime(
+#                     data_dict[key], '%d-%m-%Y').strftime('%Y-%m-%d') + "'"
+#             except Exception as e:
+#                 data_dict[key] = 'null'
+#         return data_dict
+
+#     def __clean_amount(self, data_dict, key_list):
+#         for key in key_list:
+#             for to_be_replaced in [' ', ',']:
+#                 data_dict[key] = data_dict[key].replace(to_be_replaced, '')
+#         return data_dict
+
+#     def __cibil_loan_accounts_summary_query(self):
+#         data = {
+#             'customer_id': self.customer_id
+#         }
+#         data.update(self.__clean_data_dict(
+#             self.cibil_data['loan_accounts_summary_data']))
+#         data = self.__change_date_format(
+#             data, ['credit_history_since_date', 'last_reporting_date'])
+#         sql_query = """ INSERT INTO cibil_loan_accounts_summary
+#                         (customer_id, total_loan_accounts, total_amount_sanctioned,
+#                         total_amount_overdue,total_loan_accounts_overdue,total_loan_accounts_zero_balance,
+#                         total_amount_current, credit_history_since_date,last_reporting_date,
+#                          created_at, updated_at, is_active)
+#                         VALUES ({customer_id}, {total_loan_accounts}, {total_amount_sanctioned},
+#                         {total_amount_overdue},{total_loan_accounts_overdue}, {total_loan_accounts_zero_balance},
+#                         {total_amount_current}, {credit_history_since_date}, {last_reporting_date},
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE);""".format(**data)
+#         print sql_query
+#         return sql_query
+
+#     def __cibil_loan_accounts_enquiry_query(self):
+#         sql_query = """
+#             INSERT INTO cibil_loan_accounts_enquiry
+#             (customer_id, amount, date, purpose,
+#             created_at, updated_at, is_active)
+#             VALUES
+#         """
+#         for data_dict in self.cibil_data['loan_accounts_enquiry_data']:
+#             data = self.__clean_data_dict(data_dict)
+#             data = self.__change_date_format(data, ['enquiry_date'])
+#             data = self.__clean_amount(data, ['enquiry_amount'])
+#             data.update({'customer_id': self.customer_id})
+#             sql_query += """({customer_id}, {enquiry_amount}, {enquiry_date},'{enquiry_purpose}',
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE),""".format(**data)
+#         sql_query = sql_query[:-1]
+#         sql_query += " ; "
+#         print sql_query
+#         return sql_query
+
+#     def __cibil_loan_accounts_enquiry_summary_query(self):
+#         data = {
+#             'customer_id': self.customer_id
+#         }
+#         data.update(self.__clean_data_dict(
+#             self.cibil_data['loan_enquiry_summary_data']))
+#         data = self.__change_date_format(
+#             data, ['last_date_of_enquiry'])
+#         sql_query = """
+#             INSERT INTO cibil_loan_accounts_enquiry_summary
+#             (customer_id, total_enquiries, total_enquiries_1,
+#             total_enquiries_12,total_enquiries_24, last_date_of_enquiry,
+#             created_at, updated_at, is_active)
+#             VALUES ({customer_id}, {total_loan_enquiries}, {total_loan_enquiries_30_days},
+#             {total_loan_enquiries_12_months},{total_loan_enquiries_24_months}, {last_date_of_enquiry},
+#             ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#             ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE);""".format(**data)
+#         print sql_query
+#         return sql_query
+
+#     def __cibil_contact_address_query(self):
+#         sql_query = """
+#             INSERT INTO cibil_contact_address
+#             (customer_id, code, category, address, report_date,
+#             created_at, updated_at, is_active)
+#             VALUES
+#         """
+#         for data_dict in self.cibil_data['cibil_contact_data']['address_data']:
+#             data = self.__clean_data_dict(data_dict)
+#             data = self.__change_date_format(data, ['address_report_date'])
+#             data.update({'customer_id': self.customer_id})
+#             sql_query += """({customer_id}, '{address_code}', '{address_category}', '{address}',{address_report_date},
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE),""".format(**data)
+#         sql_query = sql_query[:-1]
+#         sql_query += " ; "
+#         print sql_query
+#         return sql_query
+
+#     def __cibil_contact_query(self):
+#         sql_query = """
+#             INSERT INTO cibil_contact
+#             (customer_id, contact, contact_type, contact_value,
+#             created_at, updated_at, is_active)
+#             VALUES
+#         """
+#         for data_dict in self.cibil_data['cibil_contact_data']['telephone_data']:
+#             data = self.__clean_data_dict(data_dict)
+#             data.update({
+#                 'customer_id': self.customer_id,
+#                 'contact': 'Telephone'
+#             })
+#             sql_query += """({customer_id}, '{contact}', '{telephone_type}', '{telephone_number}',
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE),""".format(**data)
+#         for data_dict in self.cibil_data['cibil_contact_data']['email_data']:
+#             data = self.__clean_data_dict(data_dict)
+#             data.update({
+#                 'customer_id': self.customer_id,
+#                 'contact': 'Email'
+#             })
+#             sql_query += """({customer_id}, '{contact}', null, '{email}',
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#                         ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE),""".format(**data)
+#         sql_query = sql_query[:-1]
+#         sql_query += " ; "
+#         print sql_query
+#         return sql_query
+
+#     def __cibil_data_query(self):
+#         data = {
+#             'customer_id': self.customer_id,
+#             'name': self.cibil_data['cibil_kyc_data'].get('name'),
+#             'gender': self.cibil_data['cibil_kyc_data'].get('gender'),
+#             'birth_date': self.cibil_data['cibil_kyc_data'].get('birth_date'),
+#         }
+#         data.update(self.cibil_data['cibil_score_data'])
+#         data = self.__clean_data_dict(data)
+#         data = self.__change_date_format(data, ['birth_date'])
+#         sql_query = """
+#             INSERT INTO cibil_data
+#             (customer_id, name, gender,
+#             birth_date, score, comments,
+#             created_at, updated_at, is_active)
+#             VALUES ({customer_id}, '{name}', '{gender}',
+#             {birth_date},{cibil_score}, '{cibil_comments}',
+#             ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'),
+#             ( select now()::timestamp with time zone at time zone 'Asia/Kolkata'), TRUE);""".format(**data)
+#         print sql_query
+#         # return sql_query

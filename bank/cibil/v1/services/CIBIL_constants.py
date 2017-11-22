@@ -480,7 +480,7 @@ CIBIL_ATTRIBUTES = {
                 'attribute_type': 'amount'
             },
             'interest_rate': {
-                'regex': r'interest\s*rate:\s*(\d{2}\.\d{2})',
+                'regex': r'interest\s*rate:\s*(\d{2}\.\d{3})',
                 'name': 'Interest Rate',
                 'explanation': 'Interest Rate for the given Loan Account',
                 'attribute_type': 'decimal'

@@ -32,7 +32,7 @@ class CIBILReportTool(View):
                 request.FILES['cibil_report_pdf'],
                 '/cibil/v1/services').file_path
             tasks.send_cibil_report_analysis_tool_mail.delay(
-                pdf_path, request.FILES['cibil_report_pdf'].name)
+                pdf_path, request.FILES['cibil_report_pdf'].name, form.cleaned_data['customer_id'])
             return render_to_response(
                 self.form_template,
                 {
