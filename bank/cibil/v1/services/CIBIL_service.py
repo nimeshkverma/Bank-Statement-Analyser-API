@@ -490,7 +490,7 @@ class CIBILReportTool(object):
             'sender_email_id': settings.SERVER_EMAIL,
             'reciever_email_ids': settings.RECIEVER_EMAILS,
         }
-        # send_mail(email_details, self.template, [csvfile])
+        send_mail(email_details, self.template, [csvfile])
         self.__remove_file(csvfile)
 
 
