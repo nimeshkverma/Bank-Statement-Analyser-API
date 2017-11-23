@@ -349,7 +349,6 @@ class CIBILReport(object):
         self.__set_loan_accounts_data()
         self.__set_loan_accounts_dpd_data()
         self.__set_loan_accounts_enquiry_data()
-        # print self.data
 
 
 class CIBILReportTool(object):
@@ -491,7 +490,7 @@ class CIBILReportTool(object):
             'sender_email_id': settings.SERVER_EMAIL,
             'reciever_email_ids': settings.RECIEVER_EMAILS,
         }
-        send_mail(email_details, self.template, [csvfile])
+        # send_mail(email_details, self.template, [csvfile])
         self.__remove_file(csvfile)
 
 
@@ -504,9 +503,9 @@ class CIBILAnalysisTool(object):
             'loan_accounts_summary_data': {},
             'loan_enquiry_summary_data': {},
             'loan_accounts_enquiry_data': {},
+            'loan_accounts_data': {},
         }
         self.__set_cibil_analysed_data()
-        # print self.cibil_analysed_data
         self.template = 'cibil/v1/cibil_report_analysed_data.html'
         self.pwd = self.__pwd()
 
@@ -551,22 +550,7 @@ class CIBILAnalysisTool(object):
             'overdue_vs_current_liability': __overdue_vs_current_liability(source_data),
             'debt_reduction': __debt_reduction(source_data),
         }
-# Date of Last 10th Enquiry
-# Date of Last 5th Enquiry
-# Date of Last 3rd Enquiry
-# Date of Last Enquiry
-# Average Amount of Last 5 Enquiries
-# Average Amount of Last 10 Enquiries
-# Average Amount of Last 5 Enquiries - Personal Loan Only
-# Average Amount of Last 10 Enquiries - Personal Loan Only
-# Average Amount of Last 5 Enquiries - Personal Loan & Credit Card Only
-# Average Amount of Last 10 Enquiries - Personal Loan & Credit Card Only
 
-#     'loan_accounts_enquiry_data': [{
-#         'enquiry_amount': '1',
-#         'enquiry_date': '03-08-2017',
-#         'enquiry_purpose': 'personal loan'
-#     },]
     def __set_loan_enquiry_summary_data(self):
         source_data = self.cibil_data['loan_enquiry_summary_data']
 
@@ -608,7 +592,6 @@ class CIBILAnalysisTool(object):
         def __nth_enquiry_date(n, datewise_all_data_list):
             nth_enquiry_date = ''
             if len(datewise_all_data_list) >= n:
-                # print 100, n
                 nth_enquiry_date = datewise_all_data_list[
                     n - 1]['enquiry_date']
             return nth_enquiry_date
@@ -618,15 +601,11 @@ class CIBILAnalysisTool(object):
             counter = 0
             for index in xrange(0, len(datewise_all_data_list)):
                 if not enquiry_type_list:
-                    # print datewise_all_data_list[index],
-                    # nth_enquiry_amount_sum, 'all'
                     counter += 1
                     nth_enquiry_amount_sum += self.__get_amount(
                         datewise_all_data_list[index]['enquiry_amount'])
                 else:
                     if datewise_all_data_list[index]['enquiry_purpose'] in enquiry_type_list:
-                        # print datewise_all_data_list[index],
-                        # nth_enquiry_amount_sum,
                         counter += 1
                         nth_enquiry_amount_sum += self.__get_amount(
                             datewise_all_data_list[index]['enquiry_amount'])
@@ -646,12 +625,49 @@ class CIBILAnalysisTool(object):
             'average_enquiry_amount_all_5_personal_and_creditcard': __nth_enquiry_average_amount(5, datewise_all_data_list, ['personal loan', 'credit card']),
             'average_enquiry_amount_all_10_personal_and_creditcard': __nth_enquiry_average_amount(10, datewise_all_data_list, ['personal loan', 'credit card']),
         }
-        # print self.cibil_analysed_data
+
+    def __set_loan_accounts_data(self):
+        source_data = self.cibil_data['loan_accounts_data']
+
+        def __write_offs(source_data, days=None, loan_type=None):
+            write_offs = 0
+            for data_dict in source_data:
+                for date_key in ['account_close_date', 'account_last_reported_date']:
+                    try:
+                        date = datetime.datetime.strptime(
+                            data_dict.get(date_key, ''), '%d-%m-%Y')
+                        within_period = False
+                        if days == None or (datetime.datetime.now() - date).days <= days:
+                            within_period = True
+                        if loan_type == None and within_period and data_dict.get('write_off', '') in ['settled', 'written']:
+                            write_offs += 1
+                        elif data_dict.get('account_type', '') in loan_type and within_period and data_dict.get('write_off', '') in ['settled', 'written']:
+                            write_off += 1
+                        else:
+                            pass
+                        break
+                    except Exception as e:
+                        pass
+            return write_offs
+
+        self.cibil_analysed_data['loan_accounts_data'] = {
+            'write_offs_all_time': __write_offs(source_data,),
+            'write_offs_6_months': __write_offs(source_data, 183),
+            'write_offs_12_months': __write_offs(source_data, 365),
+            'write_offs_24_months': __write_offs(source_data, 730),
+            'write_offs_36_months': __write_offs(source_data, 1095),
+            'write_offs_all_time_personal': __write_offs(source_data, loan_type=['personal loan']),
+            'write_offs_6_months_personal': __write_offs(source_data, 183, ['personal loan']),
+            'write_offs_12_months_personal': __write_offs(source_data, 365, ['personal loan']),
+            'write_offs_24_months_personal': __write_offs(source_data, 730, ['personal loan']),
+            'write_offs_36_months_personal': __write_offs(source_data, 1095, ['personal loan']),
+        }
 
     def __set_cibil_analysed_data(self):
         self.__set_loan_accounts_summary_data()
         self.__set_loan_enquiry_summary_data()
         self.__set_loan_accounts_enquiry_data()
+        self.__set_loan_accounts_data()
 
     def __pwd(self):
         pwd = ''
@@ -668,7 +684,8 @@ class CIBILAnalysisTool(object):
         with open(csv_name, 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(['Section', 'Attribute', 'Value'])
-            for attribute_category in ['loan_accounts_summary_data', 'loan_enquiry_summary_data', 'loan_accounts_enquiry_data']:
+            for attribute_category in ['loan_accounts_summary_data', 'loan_enquiry_summary_data',
+                                       'loan_accounts_enquiry_data', 'loan_accounts_data']:
                 writer.writerow([attribute_category])
                 for key, value in self.cibil_analysed_data.get(attribute_category, {}).iteritems():
                     writer.writerow(['', key, value])
