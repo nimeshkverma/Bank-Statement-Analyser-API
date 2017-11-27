@@ -372,7 +372,6 @@ class CIBILReportTool(object):
             cibil_report = CIBILReport(
                 self.cibil_report_path)
         except Exception as e:
-            print e
             pass
         return cibil_report
 
@@ -504,6 +503,7 @@ class CIBILAnalysisTool(object):
             'loan_enquiry_summary_data': {},
             'loan_accounts_enquiry_data': {},
             'loan_accounts_data': {},
+            'loan_accounts_dpd_data': {},
         }
         self.__set_cibil_analysed_data()
         self.template = 'cibil/v1/cibil_report_analysed_data.html'
@@ -650,6 +650,104 @@ class CIBILAnalysisTool(object):
                         pass
             return write_offs
 
+        def __number_of_loans(source_data, days=None, loan_type=None):
+            loans_taken = 0
+            for data_dict in source_data:
+                try:
+                    date = datetime.datetime.strptime(
+                        data_dict.get('account_open_date', ''), '%d-%m-%Y')
+                    within_period = False
+                    if days == None or (datetime.datetime.now() - date).days <= days:
+                        within_period = True
+                    if loan_type == None and within_period:
+                        loans_taken += 1
+                    elif data_dict.get('account_type', '') in loan_type and within_period:
+                        loans_taken += 1
+                    else:
+                        pass
+                except Exception as e:
+                    pass
+            return loans_taken
+
+        def __amount_of_loans(source_data, days=None, loan_type=None):
+            amount_taken = 0
+            for data_dict in source_data:
+                try:
+                    date = datetime.datetime.strptime(
+                        data_dict.get('account_open_date', ''), '%d-%m-%Y')
+                    within_period = False
+                    if days == None or (datetime.datetime.now() - date).days <= days:
+                        within_period = True
+                    if loan_type == None and within_period:
+                        amount_taken += self.__get_amount(
+                            data_dict.get('sanctioned_amount', 0))
+                    elif data_dict.get('account_type', '') in loan_type and within_period:
+                        amount_taken += self.__get_amount(
+                            data_dict.get('sanctioned_amount', 0))
+                    else:
+                        pass
+                except Exception as e:
+                    pass
+            return amount_taken
+
+        def __datewise_all_data_dict(source_data):
+            datewise_all_data_dict = {}
+            for data_dict in source_data:
+                try:
+                    enquiry_date = datetime.datetime.strptime(
+                        data_dict.get('account_open_date', ''), '%d-%m-%Y')
+                    if datewise_all_data_dict.get(enquiry_date):
+                        datewise_all_data_dict[enquiry_date].apend(data_dict)
+                    else:
+                        datewise_all_data_dict[enquiry_date] = [data_dict]
+                except Exception as e:
+                    pass
+            return datewise_all_data_dict
+
+        def __datewise_all_data_list(datewise_all_data_dict):
+            datewise_all_data_dict_key = datewise_all_data_dict.keys()
+            datewise_all_data_dict_key.sort()
+            datewise_all_data_list = []
+            for key in datewise_all_data_dict_key:
+                datewise_all_data_list = datewise_all_data_list + \
+                    datewise_all_data_dict[key]
+            return datewise_all_data_list
+        datewise_all_data_dict = __datewise_all_data_dict(source_data)
+        datewise_all_data_list = __datewise_all_data_list(
+            datewise_all_data_dict)
+
+        def __loan_date(source_data, n):
+            datewise_all_data_dict = __datewise_all_data_dict(source_data)
+            datewise_all_data_list = __datewise_all_data_list(
+                datewise_all_data_dict)
+            if len(datewise_all_data_list) >= n:
+                return datewise_all_data_list[n - 1]['account_open_date']
+            else:
+                return 'Not Defined'
+
+        def __emi_estimate(principal_type, loan_type, propotion):
+            loan_amount = 0
+            for data_dict in source_data:
+                try:
+                    if loan_type in [None, []] or data_dict['account_type'] in loan_type:
+                        if principal_type == 'small' and self.__get_amount(data_dict['sanctioned_amount']) < 50000:
+                            loan_amount += self.__get_amount(
+                                data_dict['sanctioned_amount'])
+                        elif principal_type == 'medium' and 50000 <= self.__get_amount(data_dict['sanctioned_amount']) < 200000:
+                            loan_amount += self.__get_amount(
+                                data_dict['sanctioned_amount'])
+                        elif principal_type == 'big' and 200000 <= self.__get_amount(data_dict['sanctioned_amount']):
+                            loan_amount += self.__get_amount(
+                                data_dict['sanctioned_amount'])
+                        elif principal_type == None:
+                            loan_amount += self.__get_amount(
+                                data_dict['sanctioned_amount'])
+                        else:
+                            pass
+                except Exception as e:
+                    pass
+            return loan_amount * 1.0 * propotion
+
         self.cibil_analysed_data['loan_accounts_data'] = {
             'write_offs_all_time': __write_offs(source_data,),
             'write_offs_6_months': __write_offs(source_data, 183),
@@ -661,13 +759,103 @@ class CIBILAnalysisTool(object):
             'write_offs_12_months_personal': __write_offs(source_data, 365, ['personal loan']),
             'write_offs_24_months_personal': __write_offs(source_data, 730, ['personal loan']),
             'write_offs_36_months_personal': __write_offs(source_data, 1095, ['personal loan']),
+            'number_of_loans_taken_3_months': __number_of_loans(source_data, 90),
+            'number_of_loans_taken_6_months': __number_of_loans(source_data, 183),
+            'number_of_loans_taken_12_months': __number_of_loans(source_data, 365),
+            'number_of_loans_taken_3_months_personal': __number_of_loans(source_data, 90, ['personal loan']),
+            'number_of_loans_taken_6_months_personal': __number_of_loans(source_data, 183, ['personal loan']),
+            'number_of_loans_taken_12_months_personal': __number_of_loans(source_data, 365, ['personal loan']),
+            'amount_of_loans_taken_3_months': __amount_of_loans(source_data, 90),
+            'amount_of_loans_taken_6_months': __amount_of_loans(source_data, 183),
+            'amount_of_loans_taken_12_months': __amount_of_loans(source_data, 365),
+            'amount_of_loans_taken_3_months_personal': __amount_of_loans(source_data, 90, ['personal loan']),
+            'amount_of_loans_taken_6_months_personal': __amount_of_loans(source_data, 183, ['personal loan']),
+            'amount_of_loans_taken_12_months_personal': __amount_of_loans(source_data, 365, ['personal loan']),
+            'last_loan_date': __loan_date(source_data, 1),
+            'second_last_loan_date': __loan_date(source_data, 2),
+            'third_last_loan_date': __loan_date(source_data, 3),
+
+            'existing_emi_estimate_consumer_loan': __emi_estimate('small', ['consumer loan'], .0833),
+            'existing_emi_estimate_personal_loan': __emi_estimate('small', ['personal loan'], .1),
+            'existing_emi_estimate_other_loan': __emi_estimate('small', None, .1),
+            'existing_emi_estimate_2wheeler_loan': __emi_estimate('small', ['two-wheeler loan'], .09),
+            'existing_emi_estimate_gold_loan': __emi_estimate('small', ['gold loan'], .09),
+
+            'existing_emi_low_estimate_consumer_loan_medium_range': __emi_estimate('medium', ['consumer loan'], .0416),
+            'existing_emi_low_estimate_personal_loan_medium_range': __emi_estimate('medium', ['personal loan'], .035),
+            'existing_emi_low_estimate_other_loan_medium_range': __emi_estimate('medium', None, .035),
+            'existing_emi_low_estimate_2wheeler_loan_medium_range': __emi_estimate('medium', ['two-wheeler loan'], .025),
+            'existing_emi_low_estimate_gold_loan_medium_range': __emi_estimate('medium', ['gold loan'], .025),
+            'existing_emi_low_estimate_auto_loan_medium_range': __emi_estimate('medium', ['auto loan'], .025),
+
+            'existing_emi_high_estimate_consumer_loan_medium_range': __emi_estimate('medium', ['consumer loan'], .045),
+            'existing_emi_high_estimate_personal_loan_medium_range': __emi_estimate('medium', ['personal loan'], .05),
+            'existing_emi_high_estimate_other_loan_medium_range': __emi_estimate('medium', None, .05),
+            'existing_emi_high_estimate_2wheeler_loan_medium_range': __emi_estimate('medium', ['two-wheeler loan'], .03),
+            'existing_emi_high_estimate_gold_loan_medium_range': __emi_estimate('medium', ['gold loan'], .03),
+            'existing_emi_high_estimate_auto_loan_medium_range': __emi_estimate('medium', ['auto loan'], .03),
+
+
+            'existing_emi_low_estimate_personal_loan_big': __emi_estimate('big', ['personal loan'], .022),
+            'existing_emi_low_estimate_gold_loan_big': __emi_estimate('big', ['gold loan'], .01),
+            'existing_emi_low_estimate_auto_loan_big': __emi_estimate('big', ['auto loan'], .01),
+            'existing_emi_low_estimate_housing_loan_big': __emi_estimate('big', ['housing loan'], .008),
+
+
+            'existing_emi_high_estimate_personal_loan_big': __emi_estimate('big', ['personal loan'], .025),
+            'existing_emi_high_estimate_gold_loan_big': __emi_estimate('big', ['gold loan'], .012),
+            'existing_emi_high_estimate_auto_loan_big': __emi_estimate('big', ['auto loan'], .012),
+            'existing_emi_high_estimate_housing_loan_big': __emi_estimate('big', ['housing loan'], .01),
+
+
+            'existing_emi_low_estimate_credit_card': __emi_estimate(None, ['credit card'], .05),
+            'existing_emi_high_estimate_credit_card': __emi_estimate(None, ['credit card'], .10),
+
         }
+
+    def __set_loan_accounts_dpd_data(self):
+        dpd_source_data = self.cibil_data['loan_accounts_dpd_data']
+        loan_source_data = self.cibil_data['loan_accounts_data']
+
+        def __no_of_dpds(dpd_source_data, loan_source_data, dpd_days, tenure_months, loan_type=None):
+            dpds = 0
+            tenure_date = datetime.date.today() - datetime.timedelta(tenure_months * 365 / 12)
+            index = 0
+            for account_dpd_dict in dpd_source_data:
+                for dpd_dict in account_dpd_dict.values():
+                    try:
+                        if loan_type == None:
+                            if int(dpd_dict['dpd_month']) <= tenure_date.month and int(dpd_dict['dpd_year']) <= tenure_date.year and int(dpd_dict['dpd']) >= dpd_days:
+                                dpds += 1
+                        elif loan_type and loan_source_data[index]['account_type'] in loan_type:
+                            if int(dpd_dict['dpd_month']) <= tenure_date.month and int(dpd_dict['dpd_year']) <= tenure_date.year and int(dpd_dict['dpd']) >= dpd_days:
+                                dpds += 1
+                        else:
+                            pass
+                    except Exception as e:
+                        print e
+                        pass
+                index += 1
+            return dpds
+
+        self.cibil_analysed_data['loan_accounts_dpd_data'] = {}
+        for tenure_months in [6, 12, 24, 36]:
+            for dpd_days in [7, 30]:
+                key = 'number_of_{dpd_days}dpds_in_{tenure_months}months_personal'.format(
+                    dpd_days=dpd_days, tenure_months=tenure_months)
+                self.cibil_analysed_data['loan_accounts_dpd_data'][key] = __no_of_dpds(
+                    dpd_source_data, loan_source_data, dpd_days, tenure_months, ['personal loan'])
+                key = 'number_of_{dpd_days}dpds_in_{tenure_months}months_all'.format(
+                    dpd_days=dpd_days, tenure_months=tenure_months)
+                self.cibil_analysed_data['loan_accounts_dpd_data'][key] = __no_of_dpds(
+                    dpd_source_data, loan_source_data, dpd_days, tenure_months)
 
     def __set_cibil_analysed_data(self):
         self.__set_loan_accounts_summary_data()
         self.__set_loan_enquiry_summary_data()
         self.__set_loan_accounts_enquiry_data()
         self.__set_loan_accounts_data()
+        self.__set_loan_accounts_dpd_data()
 
     def __pwd(self):
         pwd = ''
@@ -685,7 +873,8 @@ class CIBILAnalysisTool(object):
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(['Section', 'Attribute', 'Value'])
             for attribute_category in ['loan_accounts_summary_data', 'loan_enquiry_summary_data',
-                                       'loan_accounts_enquiry_data', 'loan_accounts_data']:
+                                       'loan_accounts_enquiry_data', 'loan_accounts_data',
+                                       'loan_accounts_dpd_data']:
                 writer.writerow([attribute_category])
                 for key, value in self.cibil_analysed_data.get(attribute_category, {}).iteritems():
                     writer.writerow(['', key, value])
