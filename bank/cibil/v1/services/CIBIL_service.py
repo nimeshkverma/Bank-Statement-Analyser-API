@@ -725,23 +725,23 @@ class CIBILAnalysisTool(object):
             else:
                 return 'Not Defined'
 
-        def __emi_estimate(principal_type, loan_type, propotion):
+        def __emi_estimate(principal_type, loan_type, propotion, key='sanctioned_amount'):
             loan_amount = 0
             for data_dict in source_data:
                 try:
                     if loan_type in [None, []] or data_dict['account_type'] in loan_type:
-                        if principal_type == 'small' and self.__get_amount(data_dict['sanctioned_amount']) < 50000:
+                        if principal_type == 'small' and self.__get_amount(data_dict[key]) < 50000:
                             loan_amount += self.__get_amount(
-                                data_dict['sanctioned_amount'])
-                        elif principal_type == 'medium' and 50000 <= self.__get_amount(data_dict['sanctioned_amount']) < 200000:
+                                data_dict[key])
+                        elif principal_type == 'medium' and 50000 <= self.__get_amount(data_dict[key]) < 200000:
                             loan_amount += self.__get_amount(
-                                data_dict['sanctioned_amount'])
-                        elif principal_type == 'big' and 200000 <= self.__get_amount(data_dict['sanctioned_amount']):
+                                data_dict[key])
+                        elif principal_type == 'big' and 200000 <= self.__get_amount(data_dict[key]):
                             loan_amount += self.__get_amount(
-                                data_dict['sanctioned_amount'])
+                                data_dict[key])
                         elif principal_type == None:
                             loan_amount += self.__get_amount(
-                                data_dict['sanctioned_amount'])
+                                data_dict[key])
                         else:
                             pass
                 except Exception as e:
@@ -808,8 +808,8 @@ class CIBILAnalysisTool(object):
             'existing_emi_high_estimate_housing_loan_big': __emi_estimate('big', ['housing loan'], .01),
 
 
-            'existing_emi_low_estimate_credit_card': __emi_estimate(None, ['credit card'], .05),
-            'existing_emi_high_estimate_credit_card': __emi_estimate(None, ['credit card'], .10),
+            'existing_emi_low_estimate_credit_card': __emi_estimate(None, ['credit card'], .05, 'current_balance'),
+            'existing_emi_high_estimate_credit_card': __emi_estimate(None, ['credit card'], .10, 'current_balance'),
 
         }
 
