@@ -39,12 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'django_ses',
     'rest_framework',
     'statements.apps.StatementsConfig',
     'common.apps.CommonConfig',
     'cibil.apps.CibilConfig',
-
+    'notification.apps.NotificationConfig',
 ]
+
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
@@ -192,6 +194,9 @@ EMAIL_HOST_PASSWORD = 'EMAIL_HOST_PASSWORD'
 EMAIL_USE_TLS = True
 
 S3_URL = "S3_URL"
+
+AWS_SES_ACCESS_KEY_ID = 'YOUR-ACCESS-KEY-ID'
+AWS_SES_SECRET_ACCESS_KEY = 'YOUR-SECRET-ACCESS-KEY'
 
 DYNAMO_DATA_DUMP = {
     "url": "url",
