@@ -32,9 +32,7 @@ class NotificationSMS(object):
             sms_gateway_api_key=settings.SMS_GATEWAY_API_KEY)
         try:
             response = requests.request("POST", url, data=payload)
-            print response.text
         except Exception as e:
-            print e, 'fail'
             pass
 
     def send(self):

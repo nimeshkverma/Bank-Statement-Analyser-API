@@ -21,15 +21,15 @@ class NotificationSerializer(serializers.Serializer):
         if self.validated_data.get('email_notification_type'):
             email_data_list = self.validated_data.get(
                 'email_notification_data', {}).get('data_list', [])
-            tasks.send_email_notification(
+            tasks.send_email_notification.delay(
                 self.validated_data['email_notification_type'], email_data_list)
         if self.validated_data.get('sms_notification_type'):
             sms_data_list = self.validated_data.get(
                 'sms_notification_data', {}).get('data_list', [])
-            tasks.send_sms_notification(
+            tasks.send_sms_notification.delay(
                 self.validated_data['sms_notification_type'], sms_data_list)
         if self.validated_data.get('fcm_notification_type'):
             fcm_data_list = self.validated_data.get(
                 'fcm_notification_data', {}).get('data_list', [])
-            tasks.send_fcm_notification(
+            tasks.send_fcm_notification.delay(
                 self.validated_data['fcm_notification_type'], fcm_data_list)

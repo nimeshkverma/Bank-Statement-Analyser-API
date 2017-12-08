@@ -18,11 +18,15 @@ class NotificationFCM(object):
         return self.fcm_data.get('reciever', '')
 
     def __data_message(self):
-        data_message = NOTIFICATION_FCM_TYPE_DATA.get(
+        message = NOTIFICATION_FCM_TYPE_DATA.get(
             self.fcm_type, {}).get('data_message', '')
         data_message_vars = self.fcm_data.get('data_message_vars')
-        if data_message_vars and data_message:
-            data_message = data_message.format(**data_message_vars)
+        if data_message_vars and message:
+            message = message.format(**data_message_vars)
+        data_message = {
+            "title": "Upwards Fintech Services",
+            "body": message
+        }
         return data_message
 
     def __message_body(self):
