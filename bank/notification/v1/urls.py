@@ -10,6 +10,8 @@ urlpatterns = [
         views.NotificationCreate.as_view(), name='NotificationCreate'),
     url(r'^loan_agreement/$',
         views.LoanAgreementCreate.as_view(), name='LoanAgreementCreate'),
+    url(r'^admin/loan_agreement_test/$',
+        views.LoanAgreementDetails.as_view(), name='LoanAgreementDetails'),
     url(r'^ses/bounce/$', csrf_exempt(handle_bounce)),
 ]
 
