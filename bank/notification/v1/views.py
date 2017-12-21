@@ -65,13 +65,13 @@ class LoanAgreementDetails(View):
         print page_no, type(page_no)
         if page_no in range(1, 14):
             template = self.page_template.format(page_no=page_no)
-        if page_no == 15:
+        if page_no == 14:
             page_no = 1
             template = self.document_template.format(page_no=page_no)
-        if page_no == 16:
+        if page_no == 15:
             page_no = 2
             template = self.document_template.format(page_no=page_no)
-        if page_no == 17:
+        if page_no == 16:
             page_no = 3
             template = self.document_template.format(page_no=page_no)
         return render_to_response(template)

@@ -9,56 +9,56 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <style>
         #header-text {
-            font-size: 50px !important;
+            font-size: 12px !important;
         }
         
         #title-text {
-            font-size: 55px !important;
+            font-size: 13px !important;
             text-align: center;
         }
         
         #body-text {
-            font-size: 50px !important;
+            font-size: 12px !important;
         }
         
         #footer-text {
-            font-size: 45px !important;
+            font-size: 11px !important;
             font-weight: bold;
             background-color: #FFFF00;
         }
         
         #body-field-text {
-            font-size: 50px !important;
+            font-size: 12px !important;
             display: inline-block;
             text-decoration: none;
             border-bottom: 1px solid;
         }
         
         span {
-            font-size: 50px !important;
+            font-size: 12px !important;
             display: inline-block;
             text-decoration: none;
             border-bottom: 1px solid;
         }
         
-        br {
-            font-size: 20px !important;
-        }
+/*        br {
+            font-size: 2px !important;
+        }*/
         
         .first-indent {
-            margin-left: 150px;
+            margin-left: 37px;
         }
         
         .second-indent {
-            margin-left: 300px;
+            margin-left: 75px;
         }
         
         .third-indent {
-            margin-left: 450px;
+            margin-left: 112px;
         }
         
         .fourth-indent {
-            margin-left: 600px;
+            margin-left: 150px;
         }
     </style>
 </head>
@@ -70,39 +70,39 @@
                 <div id="header-text"><strong>Bajrang Investments Private Limited</strong></div>
             </div>
             <div class="pull-right">
-                <img align="left" alt="" src="https://s3-us-west-2.amazonaws.com/upwardsimages/upwards_logo.png" width="300" style="max-width: 339px;padding-bottom: 0;display: inline !important;vertical-align: bottom;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="mcnImage">
+                <img align="left" alt="" src="https://s3-us-west-2.amazonaws.com/upwardsimages/upwards_logo.png" width="300" style="max-width: 84px;padding-bottom: 0;display: inline !important;vertical-align: bottom;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="mcnImage">
             </div>
             <div class="clearfix"></div>
         </div>
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3 text-center">
                 <div id="title-text">
-                    <br>
+                    <!-- <br> -->
                     <p><strong>LOAN DETAILS</strong></p>
-                    <br>
+                    <!-- <br> -->
                 </div>
             </div>
         </div>
         <div id="body-text">
             <p><strong>Loan Application No:</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Name of the Borrower: {{borrower_full_name}}</p>
-            <br>
+            <!-- <br> -->
             <p>Name of the Co-Borrower: ____________________________ <strong> &lt;To be filled only if co-borrower/guarantor is applicable&gt;</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Loan Amount: {{loan_amount}}
-                <br> <em>(Note: The loan amount approved may be lower than the amount applied by you on our app if this is your first loan relationship with us)</em></p>
-            <br>
+                <!-- <br> --> <em>(Note: The loan amount approved may be lower than the amount applied by you on our app if this is your first loan relationship with us)</em></p>
+            <!-- <br> -->
             <p>Interest Rate (Fixed Rate): <strong>{{interest_rate}}% (flat, per month)</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Loan Tenure: <strong>{{tenure}}</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Loan Type: EMI-Based term loan</p>
-            <br>
+            <!-- <br> -->
             <p><strong><span>Calculation of Monthly Installment for Term Loan:</span></strong></p>
-            <br>
+            <!-- <br> -->
             <p>The Monthly Installment will be charged using the Equated Monthly Instalment Model. You will have the same Monthly Instalment every month</p>
-            <br>
+            <!-- <br> -->
             <p>EMI Scheme (Advance / Arrears): <strong>Arrears</strong></p>
             <p>EMI Start Date: <strong>{{emi_start_date}} (MM/DD/YYYY)</strong></p>
             <p>EMI End Date: <strong>{{emi_end_date}} (MM/DD/YYYY)</strong></p>
@@ -112,22 +112,22 @@
             <p>GST on Processing Fees (As specified by Government of India):
                 <strong>{{processing_fee_gst}}</strong></p>
             <p><strong>Pre EMI Interest ({{pre_emi_days}} Days): Rs {{pre_emi_amount}}/-</strong></p>
-            <br>
+            <!-- <br> -->
             <p><strong>LOAN CHARGES (All charges are non-refundable &amp; applicable post disbursement of loan)</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Date on which annual outstanding balance statement will be issued: <strong>31st May</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Details of Security/ Collateral: <strong>N/A</strong></p>
-            <br>
+            <!-- <br> -->
             <p>Date of Signing: ___________________________</p>
-            <br>
+            <!-- <br> -->
             <p>Place of Signing: ___________________________</p>
-            <br>
+            <!-- <br> -->
             <p>NBFC's Branch: ___________________________</p>
-            <br>
-            <br>
-            <br>
-            <br>
+            <!-- <br> -->
+            <!-- <br> -->
+            <!-- <br> -->
+            <!-- <br> -->
         </div>
         <div class="page-footer">
             <div class="row">
@@ -138,8 +138,8 @@
             <div class="col-md-2 col-md-offset-5">
                 <div id="footer-text">Sign Here--> </div>
             </div>
-            <br>
-            <br>
+            <!-- <br> -->
+            <!-- <br> -->
         </div>
     </div>
 </body>
