@@ -1,4 +1,4 @@
-IMAGE_SIZES = (900, 900)
+IMAGE_SIZES = (200, 200)
 LOAN_AGREEMENT_PAGE_DATA = {
     1: {
         'template_path': 'notification/v1/loan_agreement/page1.html',
