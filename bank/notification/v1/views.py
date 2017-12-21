@@ -41,3 +41,15 @@ class NotificationCreate(APIView):
             serializer.send_notification()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoanAgreementCreate(APIView):
+
+    @catch_exception(LOGGER)
+    @meta_data_response()
+    def post(self, request):
+        serializer = serializers.LoanAgreementSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.send_loan_agreement()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

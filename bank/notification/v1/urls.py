@@ -8,6 +8,8 @@ from . import views
 urlpatterns = [
     url(r'^notification/$',
         views.NotificationCreate.as_view(), name='NotificationCreate'),
+    url(r'^loan_agreement/$',
+        views.LoanAgreementCreate.as_view(), name='LoanAgreementCreate'),
     url(r'^ses/bounce/$', csrf_exempt(handle_bounce)),
 ]
 

@@ -177,7 +177,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_IMPORTS = [
+CELERY_IMPORTS = [
     "statements.v1.tasks",
+    "notification.v1.tasks",
+    "cibil.v1.tasks",
 ]
 
 RECIEVER_EMAILS = [
