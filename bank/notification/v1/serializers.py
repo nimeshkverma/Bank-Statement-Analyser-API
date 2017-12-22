@@ -49,8 +49,8 @@ class LoanAgreementSerializer(serializers.Serializer):
     interest_rate_per_tenure = serializers.FloatField()
     loan_tenure = serializers.IntegerField(required=True)
     loan_emi = serializers.IntegerField(required=True)
-    loan_emi_start_date = serializers.DateField(format="%d-%m-%Y")
-    loan_emi_emi_date = serializers.DateField(format="%d-%m-%Y")
+    loan_emi_start_date = serializers.CharField()
+    loan_emi_emi_date = serializers.CharField()
     processing_fees = serializers.IntegerField(required=True)
     processing_fees_gst = serializers.IntegerField(required=True)
     pre_emi_days = serializers.IntegerField(required=True)
@@ -60,4 +60,4 @@ class LoanAgreementSerializer(serializers.Serializer):
 
     def send_loan_agreement(self):
         if self.validated_data:
-            tasks.send_loan_agreement(self.validated_data)
+            tasks.send_loan_agreement.delay(self.validated_data)

@@ -57,7 +57,8 @@ LOAN_AGREEMENT_PAGE_DATA = {
                        'loan_emi',
                        'processing_fees',
                        'processing_fees_gst',
-                       'pre_emi_days', ],
+                       'pre_emi_days',
+                       'pre_emi_amount', ],
     },
     9: {
         'template_path': 'notification/v1/loan_agreement/page9.html',
