@@ -1,4 +1,5 @@
 IMAGE_SIZES = (200, 200)
+
 LOAN_AGREEMENT_PAGE_DATA = {
     1: {
         'template_path': 'notification/v1/loan_agreement/page1.html',
@@ -6,11 +7,11 @@ LOAN_AGREEMENT_PAGE_DATA = {
         'attributes': ['borrower_full_name',
                        'pan',
                        'aadhaar',
-                       'employer',
+                       'company',
                        'address',
                        'city',
                        'pincode',
-                       'is_guarantor_populated',
+                       'is_co_borrower_populated',
                        'city',
                        'borrower_full_name', ],
     },
@@ -49,13 +50,13 @@ LOAN_AGREEMENT_PAGE_DATA = {
         'pdf_name': 'page8_pdf',
         'attributes': ['borrower_full_name',
                        'loan_amount',
-                       'interest_rate',
-                       'tenure',
-                       'emi_start_date',
-                       'emi_end_date',
-                       'emi_amount',
-                       'processing_fee',
-                       'processing_fee_gst',
+                       'interest_rate_per_tenure',
+                       'loan_tenure',
+                       'loan_emi_start_date',
+                       'loan_emi_emi_date',
+                       'loan_emi',
+                       'processing_fees',
+                       'processing_fees_gst',
                        'pre_emi_days', ],
     },
     9: {

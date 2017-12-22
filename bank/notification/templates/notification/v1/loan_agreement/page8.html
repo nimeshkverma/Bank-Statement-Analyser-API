@@ -93,9 +93,9 @@
             <p>Loan Amount: {{loan_amount}}
                 <!-- <br> --> <em>(Note: The loan amount approved may be lower than the amount applied by you on our app if this is your first loan relationship with us)</em></p>
             <!-- <br> -->
-            <p>Interest Rate (Fixed Rate): <strong>{{interest_rate}}% (flat, per month)</strong></p>
+            <p>Interest Rate (Fixed Rate): <strong>{{interest_rate_per_tenure}}% (flat, per month)</strong></p>
             <!-- <br> -->
-            <p>Loan Tenure: <strong>{{tenure}}</strong></p>
+            <p>Loan Tenure: <strong>{{loan_tenure}}</strong></p>
             <!-- <br> -->
             <p>Loan Type: EMI-Based term loan</p>
             <!-- <br> -->
@@ -104,13 +104,13 @@
             <p>The Monthly Installment will be charged using the Equated Monthly Instalment Model. You will have the same Monthly Instalment every month</p>
             <!-- <br> -->
             <p>EMI Scheme (Advance / Arrears): <strong>Arrears</strong></p>
-            <p>EMI Start Date: <strong>{{emi_start_date}} (MM/DD/YYYY)</strong></p>
-            <p>EMI End Date: <strong>{{emi_end_date}} (MM/DD/YYYY)</strong></p>
-            <p>EMI Amount: <strong>{{emi_amount}}</strong></p>
+            <p>EMI Start Date: <strong>{{loan_emi_start_date}} (MM/DD/YYYY)</strong></p>
+            <p>EMI End Date: <strong>{{loan_emi_emi_date}} (MM/DD/YYYY)</strong></p>
+            <p>EMI Amount: <strong>{{loan_emi}}</strong></p>
             <p>Advance EMI Amount: <strong>N/A</strong></p>
-            <p>Processing Fees (2% of Loan Amount): <strong>{{processing_fee}}</strong></p>
+            <p>Processing Fees (2% of Loan Amount): <strong>{{processing_fees}}</strong></p>
             <p>GST on Processing Fees (As specified by Government of India):
-                <strong>{{processing_fee_gst}}</strong></p>
+                <strong>{{processing_fees_gst}}</strong></p>
             <p><strong>Pre EMI Interest ({{pre_emi_days}} Days): Rs {{pre_emi_amount}}/-</strong></p>
             <!-- <br> -->
             <p><strong>LOAN CHARGES (All charges are non-refundable &amp; applicable post disbursement of loan)</strong></p>
