@@ -50,7 +50,7 @@ class LoanAgreementSerializer(serializers.Serializer):
     loan_tenure = serializers.IntegerField(required=True)
     loan_emi = serializers.IntegerField(required=True)
     loan_emi_start_date = serializers.CharField()
-    loan_emi_emi_date = serializers.CharField()
+    loan_emi_end_date = serializers.CharField()
     processing_fees = serializers.IntegerField(required=True)
     processing_fees_gst = serializers.IntegerField(required=True)
     pre_emi_days = serializers.IntegerField(required=True)
