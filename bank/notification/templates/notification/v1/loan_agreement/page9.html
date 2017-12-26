@@ -76,56 +76,40 @@
         </div>
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3 text-center">
-                    <p><strong>SCHEDULE-CUM-KEY FACT STATEMENT</strong></p>
+                <div id="title-text">
+                    <p><strong>LOAN DETAILS</strong></p>
+                </div>
             </div>
         </div>
         <div id="body-text">
-            <p>Loan Prepayment Charges: <strong> (Mentioned as percentage of Outstanding Balance)</strong></p>
-            <ul class="first-indent">
-                <li>0-6 Months of EMI repayment: <strong>4%</strong></li>
-            </ul>
-            <ul class="first-indent">
-                <li>7 Months of EMI repayment: <strong>0%</strong></li>
-            </ul>
-            <p><strong>Note: Prepayment not allowed prior to payment of 1 EMI. Service tax as applicable, would be charged additionally</strong></p>
-            <div class="row">
-                <div class="col-lg-6 col-lg-offset-3 text-center">
-                    <div id="title-text">
-                        <p><strong>LOAN STANDARD CHARGES</strong></p>
-                    </div>
-                </div>
-            </div>
-            <p>CIBIL Report Copy Charges: <strong>Rs 50</strong></p>
-            <p>Cheque / ECS / SI / NACH Return Charges: <strong>Rs 550/- (+) GST. (without prejudice to NBFC's civil and criminal rights and remedies)</strong></p>
-            <p>Default Interest/ Late Payment charges (for the over-due period on EMI / Principal overdue): <strong>3% per month (over and above the normal interest rate)</strong></p>
-            <p>NACH/ECS/ SI Swapping Charges: <strong>Rs 500/- plus GST and Surcharge (if any)</strong></p>
-            <p>Loan Cancellation Charges: <strong>NIL [If done within 3 working days]</strong></p>
-            <p>Duplicate Amortization / Repayment Schedule charges: <strong>Nil</strong></p>
-            <p>Other Charges, commissions, fees: <strong>As per Application or as may be specified by the NBFC</strong></p>
-            <p>Legal Collection &amp; Incidental Charges: <strong>At Actuals</strong></p>
-            <p>Stamp Duty &amp; Other Statutory Charges: <strong>As per applicable laws of the State</strong></p>
-            <p>Taxes: <strong>At actuals, applicable presently or in future</strong></p>
-            <div class="row">
-                <div class="col-lg-6 col-lg-offset-3 text-center">
-                    <div id="title-text">
-                        <p><strong>Acceptance by Authorized Signatories</strong></p>
-                    </div>
-                </div>
-            </div>
-            <p>Accepted by Bajrang Investments Pvt Ltd (signed by Authorized Signatory)</p>
+            <p><strong>Loan Application No:</strong></p>
+            <p>Name of the Borrower: {{borrower_full_name}}</p>
+            <p>Loan Purpose: {{loan_purpose}}</p>
+            <p>Name of the Co-Borrower: ____________________________ <strong> &lt;To be filled only if co-borrower/guarantor is applicable&gt;</strong></p>
+            <p>Loan Amount: {{loan_amount}}</p>
+            <p><em>(Note: The loan amount approved may be lower than the amount applied by you on our app if this is your first loan relationship with us)</em></p>
+            <p>Interest Rate (Fixed Rate): <strong>{{interest_rate_per_tenure}}% (flat, per month)</strong></p>
+            <p>Loan Tenure: <strong>{{loan_tenure}}</strong></p>
+            <p>Loan Type: EMI-Based term loan</p>
+            <p><strong><span>Calculation of Monthly Installment for Term Loan:</span></strong></p>
+            <p>The Monthly Installment will be charged using the Equated Monthly Instalment Model. You will have the same Monthly Instalment every month</p>
+            <p>EMI Scheme (Advance / Arrears): <strong>Arrears</strong></p>
+            <p>EMI Start Date: <strong>{{loan_emi_start_date}} (MM/DD/YYYY)</strong></p>
+            <p>EMI End Date: <strong>{{loan_emi_emi_date}} (MM/DD/YYYY)</strong></p>
+            <p>EMI Amount: <strong>{{loan_emi}}</strong></p>
+            <p>Advance EMI Amount: <strong>N/A</strong></p>
+            <p>Processing Fees (2% of Loan Amount): <strong>{{processing_fees}}</strong></p>
+            <p>GST on Processing Fees (As specified by Government of India):
+                <strong>{{processing_fees_gst}}</strong></p>
+            <p><strong>Pre EMI Interest ({{pre_emi_days}} Days): Rs {{pre_emi_amount}}/-</strong></p>
+            <p><strong>LOAN CHARGES (All charges are non-refundable &amp; applicable post disbursement of loan)</strong></p>
+            <p>Date on which annual outstanding balance statement will be issued: <strong>31st May</strong></p>
+            <p>Details of Security/ Collateral: <strong>N/A</strong></p>
+            <p>Date of Signing: ___________________________</p>
+            <p>Place of Signing: ___________________________</p>
+            <p>NBFC's Branch: ___________________________</p>
             <br>
             <br>
-            <p><strong>Borrower Signature: Sign Here-></strong></p>
-            <br>
-            <br>
-            <p><strong>Co-Borrower/Guarantor ( _________________ ) Signature: </strong> _______________________</p>
-            <p>Signed and Delivered by the Borrower &amp; Co-Borrower(s) in token of and in witness of them having read (and/or being explained), verified, understood, irrevocably agreed to, accepted, confirmed and declared all the clauses viz. 1 to 18 on all the page no's 1 to 4 of the Terms and Conditions of Personal Loan' document, the Schedule, all contents thereof including all the terms and conditions contained therein, and authenticated accuracy and correctness of the same.</p>
-            <p><strong>Borrower Signature: Sign Here-></strong></p>
-            <br>
-            <br>    
-            <p><strong>Co-Borrower/Guarantor ( _________________ ) Signature: </strong> _______________________</p>
-            <br>
-            <br>    
         </div>
         <div class="page-footer">
             <div class="row">
@@ -136,6 +120,7 @@
             <div class="col-md-2 col-md-offset-5">
                 <div id="footer-text">Sign Here--> </div>
             </div>
+            <br>
             <br>
             <br>
         </div>

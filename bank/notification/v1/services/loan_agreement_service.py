@@ -108,7 +108,7 @@ class LoanAgreement(object):
                 attribute, 'N.A')
         return template_data
 
-    def __create_12_loan_pages(self):
+    def __create_13_loan_pages(self):
         for page_no, pdf_page_data in LOAN_AGREEMENT_PAGE_DATA.iteritems():
             template = get_template(pdf_page_data['template_path'])
             html_part = template.render(
