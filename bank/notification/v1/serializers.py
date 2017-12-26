@@ -55,9 +55,10 @@ class LoanAgreementSerializer(serializers.Serializer):
     processing_fees_gst = serializers.IntegerField(required=True)
     pre_emi_days = serializers.IntegerField(required=True)
     pre_emi_amount = serializers.IntegerField(required=True)
+    loan_purpose = serializers.CharField()
     reciever_emails = serializers.ListField(
         child=serializers.EmailField(allow_null=True))
 
     def send_loan_agreement(self):
         if self.validated_data:
-            tasks.send_loan_agreement.delay(self.validated_data)
+            tasks.send_loan_agreement(self.validated_data)

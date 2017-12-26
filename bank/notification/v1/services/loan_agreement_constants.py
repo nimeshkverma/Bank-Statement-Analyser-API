@@ -57,6 +57,7 @@ LOAN_AGREEMENT_PAGE_DATA = {
                        'loan_amount',
                        'interest_rate_per_tenure',
                        'loan_tenure',
+                       'loan_purpose',
                        'loan_emi_start_date',
                        'loan_emi_emi_date',
                        'loan_emi',
