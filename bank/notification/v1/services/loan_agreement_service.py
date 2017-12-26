@@ -104,8 +104,9 @@ class LoanAgreement(object):
     def __page_template_data(self, attribute_list):
         template_data = {}
         for attribute in attribute_list:
-            template_data[attribute] = self.loan_agreement_data.get(
-                attribute, 'N.A')
+            attribute_data = self.loan_agreement_data.get(attribute, 'N.A')
+            template_data[attribute] = attribute_data.upper() if type(
+                attribute_data) is str else attribute_data
         return template_data
 
     def __create_13_loan_pages(self):
