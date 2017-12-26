@@ -61,4 +61,4 @@ class LoanAgreementSerializer(serializers.Serializer):
 
     def send_loan_agreement(self):
         if self.validated_data:
-            tasks.send_loan_agreement(self.validated_data)
+            tasks.send_loan_agreement.delay(self.validated_data)
