@@ -168,7 +168,7 @@ class LoanAgreement(object):
         writer.write(self.loan_agreement_path)
 
     def get_loan_agreement(self):
-        self.__create_12_loan_pages()
+        self.__create_13_loan_pages()
         self.__create_document_loan_pages()
         self.__stitch_pdfs()
         return self.loan_agreement_path
