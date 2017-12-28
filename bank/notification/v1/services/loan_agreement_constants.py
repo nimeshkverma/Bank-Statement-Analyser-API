@@ -97,6 +97,12 @@ LOAN_AGREEMENT_PAGE_DATA = {
     13: {
         'template_path': 'notification/v1/loan_agreement/page13.html',
         'pdf_name': 'page13_pdf',
+        'attributes': ['borrower_full_name',
+                       'loan_purpose'],
+    },
+    14: {
+        'template_path': 'notification/v1/loan_agreement/page14.html',
+        'pdf_name': 'page14_pdf',
         'attributes': [],
     },
 }

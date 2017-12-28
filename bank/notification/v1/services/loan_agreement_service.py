@@ -104,7 +104,8 @@ class LoanAgreement(object):
     def __page_template_data(self, attribute_list):
         template_data = {}
         for attribute in attribute_list:
-            attribute_data = self.loan_agreement_data.get(attribute, 'N.A')
+            attribute_data = self.loan_agreement_data.get(
+                attribute, '____________')
             try:
                 attribute_data = attribute_data.upper()
             except Exception as e:
@@ -112,7 +113,7 @@ class LoanAgreement(object):
             template_data[attribute] = attribute_data
         return template_data
 
-    def __create_13_loan_pages(self):
+    def __create_14_loan_pages(self):
         for page_no, pdf_page_data in LOAN_AGREEMENT_PAGE_DATA.iteritems():
             template = get_template(pdf_page_data['template_path'])
             html_part = template.render(
@@ -172,7 +173,7 @@ class LoanAgreement(object):
         writer.write(self.loan_agreement_path)
 
     def get_loan_agreement(self):
-        self.__create_13_loan_pages()
+        self.__create_14_loan_pages()
         self.__create_document_loan_pages()
         self.__stitch_pdfs()
         return self.loan_agreement_path
