@@ -16,8 +16,8 @@ NOTIFICATION_FCM_TYPE_DATA = {
         'message_body': "Dear {full_name}, your eligibility section is successfully completed on our app :) We will revert with approve/reject in 48 hours."
     },
     'eligibility_evaluation_approved': {
-        'data_message': "Dear {full_name}, we are pleased to inform that your application is approved. Kindly complete the next KYC section on our app for loan disbursal.",
-        'message_body': "Dear {full_name}, we are pleased to inform that your application is approved. Kindly complete the next KYC section on our app for loan disbursal."
+        'data_message': "Dear {full_name}, your eligibility section is complete. Kindly complete the next KYC section on our app to continue the process.",
+        'message_body': "Dear {full_name}, your eligibility section is complete. Kindly complete the next KYC section on our app to continue the process."
     },
     'eligibility_evaluation_reject': {
         'data_message': "Dear {full_name}, we regret to inform that your loan application is rejected. Please check your email for more details.",
