@@ -33,17 +33,23 @@ from IDFC_bank_statements_service import IDFCBankStatements
 from Andra_bank_statements_a_service import AndraBankStatementsA
 from Andra_bank_statements_b_service import AndraBankStatementsB
 from Bank_of_Baroda_bank_statements_a_service import BankOfBarodaBankStatementsA
+from Bank_of_India_bank_statements_a_service import BankOfIndiaBankStatementsA
 from CITI_bank_statements_a_service import CITIBankStatementsA
 from CITI_bank_statements_b_service import CITIBankStatementsB
 from Canara_bank_statements_a_service import CanaraBankStatementsA
 from Canara_bank_statements_b_service import CanaraBankStatementsB
+from Central_Bank_of_India_bank_statements_a_service import CentralBankOfIndiaBankStatementsA
 from Corporation_bank_statements_a_service import CorporationBankStatementsA
 from IndianOverseas_bank_statements_service import IndianOverseasStatementsA
 from Indian_bank_statements_a_service import IndianBankStatementsA
 from IndusInd_bank_statements_a_service import IndusIndBankStatementsA
 from IndusInd_bank_statements_b_service import IndusIndBankStatementsB
+from Karur_Vyasa_bank_statements_a_service import KarurVyasaBankStatementsA
+from Karur_Vyasa_bank_statements_b_service import KarurVyasaBankStatementsB
 from OrientalBankOfCommerce_bank_statements_a_service import OrientalBankOfCommerceBankStatementsA
 from PunjabNational_bank_statements_a_service import PunjabNationalBankStatementsA
+from StandardChartered_bank_statements_a_service import StandardCharteredBankStatementsA
+from StandardChartered_bank_statements_b_service import StandardCharteredBankStatementsB
 from Union_bank_statements_a_service import UnionBankStatementsA
 from Yes_bank_statements_a_service import YesBankStatementsA
 
@@ -126,11 +132,14 @@ class BankStatementsRawData(object):
             pdf_decryption = self.__pdf_decryption(password_type)
             if pdf_decryption:
                 break
-        pdf_path_decrypt = self.__get_decrypted_pdf_path()
-        file_clean_command = 'rm {pdf_path_decrypt}'.format(
-            pdf_path_decrypt=pdf_path_decrypt)
-        pdf_text = self.__pdf_to_text(pdf_path_decrypt)
-        subprocess.call(file_clean_command, shell=True)
+        if pdf_decryption:
+            pdf_path_decrypt = self.__get_decrypted_pdf_path()
+            file_clean_command = 'rm {pdf_path_decrypt}'.format(
+                pdf_path_decrypt=pdf_path_decrypt)
+            pdf_text = self.__pdf_to_text(pdf_path_decrypt)
+            subprocess.call(file_clean_command, shell=True)
+        else:
+            pdf_text = self.__pdf_to_text(self.pdf_path)
         return pdf_text
 
     def __get_raw_table_data(self):
@@ -159,7 +168,7 @@ class BankStatementsRawData(object):
         interpreter = PDFPageInterpreter(manager, converter)
 
         infile = file(pdf_path_decrypt, 'rb')
-        for page in PDFPage.get_pages(infile, pagenums):
+        for page in PDFPage.get_pages(infile, pagenums, check_extractable=False):
             interpreter.process_page(page)
         infile.close()
         converter.close()
@@ -264,6 +273,24 @@ class BankStatements(object):
             },
             'overseas_a': {
                 'class': IndianOverseasStatementsA,
+            },
+            'boi_a': {
+                'class': BankOfIndiaBankStatementsA,
+            },
+            'cbi_a': {
+                'class': CentralBankOfIndiaBankStatementsA,
+            },
+            'karur_vyasa_a': {
+                'class': KarurVyasaBankStatementsA,
+            },
+            'karur_vyasa_b': {
+                'class': KarurVyasaBankStatementsB,
+            },
+            'standard_chartered_a': {
+                'class': StandardCharteredBankStatementsA,
+            },
+            'standard_chartered_b': {
+                'class': StandardCharteredBankStatementsB,
             },
         }
         self.bank_name = None

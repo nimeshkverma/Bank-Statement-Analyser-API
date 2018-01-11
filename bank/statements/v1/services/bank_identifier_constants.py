@@ -4,7 +4,9 @@ PROMINENT_BANK_LIST = ['idfc_a', 'idbi_a', 'idbi_b', 'kotak_c', 'kotak_b',
 LESS_PROMINENT_BANK_LIST = ['citi_a', 'citi_b', 'canara_a', 'canara_b',
                             'yes_a', 'baroda_a', 'indusind_a', 'indusind_b',
                             'pnb_a', 'union_a', 'indian_a', 'andra_a', 'andra_b',
-                            'corporation_a', 'oriental_a', 'overseas_a']
+                            'corporation_a', 'oriental_a', 'overseas_a', 'boi_a', 'cbi_a',
+                            'karur_vyasa_a', 'karur_vyasa_b', 'standard_chartered_a',
+                            'standard_chartered_b']
 
 TABLE_ROW_MINIMUM_COVERAGE = 70
 
@@ -1780,43 +1782,43 @@ LESS_PROMINENT_BANK_FEATURES = {
                 {
                         'string': 'branch details',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'customer details',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'please ensure that all the cheque leaves in your custody are duly branded',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'customers are requested in their own interest not to issue cheques without',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'please maintain minimum average balance',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'to avoid levy of charges',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'pls note penal interest may be charged in loan accounts due to financial reasons',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'quarterly average balances',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'ledger folio charges',
                         'weight': 1
-                        },
+                },
                 {
                         'string': 'point of sale',
                         'weight': 1
-                        },
+                },
             ],
             'weight': 4
         },
@@ -2627,6 +2629,532 @@ LESS_PROMINENT_BANK_FEATURES = {
                 },
                 {
                     'string': 'no',
+                    'weight': 1
+                },
+            ],
+            'weight': 2
+        }
+    },
+    'boi_a': {
+        'keywords': {
+            'features': [
+                {
+                    'string': 'this is a computer generated statement and hence no signature required',
+                    'weight': 1
+                },
+                {
+                    'string': 'please provide your contact details, mobile number, pan card, aadhar card, date of birth to help you serve better',
+                    'weight': 1
+                },
+                {
+                    'string': 'beware of fictitious offers, messages/sms about lottery winnings, cheap fund offers, employment offers, scholarship offers, offer of immigration visas, offer of admission to reputed universities abroad and similar such offers from fraudsters either within the country or from abroad',
+                    'weight': 1
+                },
+                {
+                    'string': 'for any support or clarification please contact call centre no',
+                    'weight': 1
+                },
+                {
+                    'string': 'any discrepancy in this document of accounts should be notified to the bank within a period of 30 days of receipt of this statement',
+                    'weight': 1
+                },
+                {
+                    'string': 'it will be treated that the entries/contents of this statement are checked and found correct by you, if no such complaint is madewithin the period stated above',
+                    'weight': 1
+                },
+            ],
+            'weight': 4
+        },
+        'regex_words': {
+            'features':  [
+                {
+                    'string': r'(account\s*statement:\s*for\s*the\s*period\s*[a-zA-Z]{3,9}\s*\d{2}\,\s*\d{4}\s*to\s*[a-zA-Z]{3,9}\s*\d{2}\,\s*\d{4})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(bkid\d{7})',
+                    'weight': 1
+                },
+
+            ],
+            'weight': 3
+        },
+        'table_dimensions': {
+            'features': [
+                {
+                    'minimum_columns': 4,
+                    'weight': 1
+                },
+                {
+                    'maximum_columns': 5,
+                    'weight': 1
+                }
+            ],
+            'weight': 1
+        },
+        'table_headers': {
+            'features': [
+                {
+                    'string': 'sl no',
+                    'weight': 1
+                },
+                {
+                    'string': 'txn date',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque no',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawal',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposits',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+            ],
+            'weight': 2
+        }
+    },
+    'cbi_a': {
+        'keywords': {
+            'features': [
+                {
+                    'string': 'central bank of india',
+                    'weight': 1
+                },
+                {
+                    'string': 'statement downloaded by',
+                    'weight': 1
+                },
+                {
+                    'string': 'unless a constituent notifies the bank immediately of any discrepancy found by him in this statement of a/c, it will be taken that he has found the a/c correct',
+                    'weight': 1
+                },
+                {
+                    'string': r'end of statement - from internet banking',
+                    'weight': 1
+                },
+            ],
+            'weight': 4
+        },
+        'regex_words': {
+            'features':  [
+                {
+                    'string': r'(statement\s*of\s*account\s*from\s*\d{2}/\d{2}/\d{4}\s*to\s*\d{2}/\d{2}/\d{4})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(cleared\s*balance\s*:\s*\d+\.\d{2})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(uncleared\s*amount\s*:\s*\d+\.\d{2})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(drawing\s*power\s*:\s*\d+\.\d{2})',
+                    'weight': 1
+                },
+
+            ],
+            'weight': 3
+        },
+        'table_dimensions': {
+            'features': [
+                {
+                    'minimum_columns': 5,
+                    'weight': 1
+                },
+                {
+                    'maximum_columns': 7,
+                    'weight': 1
+                }
+            ],
+            'weight': 1
+        },
+        'table_headers': {
+            'features': [
+                {
+                    'string': 'post date',
+                    'weight': 1
+                },
+                {
+                    'string': 'value',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque',
+                    'weight': 1
+                },
+                {
+                    'string': 'account description',
+                    'weight': 1
+                },
+                {
+                    'string': 'debit',
+                    'weight': 1
+                },
+                {
+                    'string': 'credit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+            ],
+            'weight': 2
+        }
+    },
+    'karur_vyasa_a': {
+        'keywords': {
+            'features': [
+                {
+                    'string': 'karur vysya bank',
+                    'weight': 1
+                },
+                {
+                    'string': 'www.kvb.co.in',
+                    'weight': 1
+                },
+                {
+                    'string': r'eservice@kvbmail.com',
+                    'weight': 1
+                },
+                {
+                    'string': 'karur vysya bank does not ask for personal security details like your internet banking or phone banking passwords on the email, phone or otherwise',
+                    'weight': 1
+                },
+                {
+                    'string': "never disclose your passwords to anyone, even to the bank's staff",
+                    'weight': 1
+                },
+            ],
+            'weight': 4
+        },
+        'regex_words': {
+            'features':  [
+                {
+                    'string':  r'(for\s*the\s*period\s*\d{2}/\d{2}/\d{4}\s*to\s*\d{2}/\d{2}/\d{4})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(opening\s*balance\s*[0-9,]+\.\d{2})',
+                    'weight': 1
+                },
+            ],
+            'weight': 3
+        },
+        'table_dimensions': {
+            'features': [
+                {
+                    'minimum_columns': 3,
+                    'weight': 1
+                },
+                {
+                    'maximum_columns': 4,
+                    'weight': 1
+                }
+            ],
+            'weight': 1
+        },
+        'table_headers': {
+            'features': [
+                {
+                    'string': 'txn',
+                    'weight': 1
+                },
+                {
+                    'string': 'brn',
+                    'weight': 1
+                },
+                {
+                    'string': 'particulars',
+                    'weight': 1
+                },
+                {
+                    'string': 'ref. no',
+                    'weight': 1
+                },
+                {
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'debit',
+                    'weight': 1
+                },
+                {
+                    'string': 'credit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+            ],
+            'weight': 2
+        }
+    },
+    'karur_vyasa_b': {
+        'keywords': {
+            'features': [
+                {
+                    'string': 'note :- this is a computer generated report and does not require signature.',
+                    'weight': 1
+                },
+                {
+                    'string': 'searched by',
+                    'weight': 1
+                },
+                {
+                    'string': r'opening balance ( balance b/f )',
+                    'weight': 1
+                },
+            ],
+            'weight': 4
+        },
+        'regex_words': {
+            'features':  [
+                {
+                    'string':  r'(for\s*the\s*period\s*\d{2}/\d{2}/\d{4}\s*to\s*\d{2}/\d{2}/\d{4})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(specify\s*period\s*\d{2}-[a-zA-Z]{3}-\d{4}\s*\d{2}-[a-zA-Z]{3}-\d{4})',
+                    'weight': 1
+                },
+            ],
+            'weight': 3
+        },
+        'table_dimensions': {
+            'features': [
+                {
+                    'minimum_columns': 6,
+                    'weight': 1
+                },
+                {
+                    'maximum_columns': 7,
+                    'weight': 1
+                }
+            ],
+            'weight': 1
+        },
+        'table_headers': {
+            'features': [
+                {
+                    'string': 'transaction date',
+                    'weight': 1
+                },
+                {
+                    'string': 'value date',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch',
+                    'weight': 1
+                },
+                {
+                    'string': 'cheque no',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'debit',
+                    'weight': 1
+                },
+                {
+                    'string': 'credit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+            ],
+            'weight': 2
+        }
+    },
+    'standard_chartered_a': {
+        'keywords': {
+            'features': [
+                {
+                    'string': 'reward points statement for',
+                    'weight': 1
+                },
+                {
+                    'string': 'reward plus 201',
+                    'weight': 1
+                },
+                {
+                    'string': 'points accrued',
+                    'weight': 1
+                },
+                {
+                    'string': 'points redeemed',
+                    'weight': 1
+                },
+                {
+                    'string': 'adjustment bonus',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance forward',
+                    'weight': 1
+                },
+            ],
+            'weight': 4
+        },
+        'regex_words': {
+            'features': [
+                {
+                    'string': r'(statement\s*date\s*:\s*\d{2}\s*[a-zA-Z]{3}\s*\d{4})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(ifsc\s*:\s*scbl\d{7})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(micr\s*:\s*\d{3}036\d{3})',
+                    'weight': 1
+                },
+            ],
+            'weight': 3
+        },
+        'table_dimensions': {
+            'features': [
+                {
+                    'minimum_columns': 3,
+                    'weight': 1
+                },
+                {
+                    'maximum_columns': 6,
+                    'weight': 1
+                }
+            ],
+            'weight': 1
+        },
+        'table_headers': {
+            'features': [
+                {
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'value',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawal',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
+                    'weight': 1
+                },
+            ],
+            'weight': 2
+        }
+    },
+    'standard_chartered_b': {
+        'keywords': {
+            'features': [
+                {
+                    'string': 'branch statement date currency account type account no',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance brought forward',
+                    'weight': 1
+                },
+                {
+                    'string': 'account statement',
+                    'weight': 1
+                },
+                {
+                    'string': 'branch address:',
+                    'weight': 1
+                },
+            ],
+            'weight': 4
+        },
+        'regex_words': {
+            'features': [
+                {
+                    'string': r'(ifsc\s*:\s*scbl\d{7})',
+                    'weight': 1
+                },
+                {
+                    'string': r'(micr\s*[code]*:\s*\d{3}036\d{3})',
+                    'weight': 1
+                },
+            ],
+            'weight': 3
+        },
+        'table_dimensions': {
+            'features': [
+                {
+                    'minimum_columns': 3,
+                    'weight': 1
+                },
+                {
+                    'maximum_columns': 6,
+                    'weight': 1
+                }
+            ],
+            'weight': 1
+        },
+        'table_headers': {
+            'features': [
+                {
+                    'string': 'date',
+                    'weight': 1
+                },
+                {
+                    'string': 'value',
+                    'weight': 1
+                },
+                {
+                    'string': 'description',
+                    'weight': 1
+                },
+                {
+                    'string': 'withdrawal',
+                    'weight': 1
+                },
+                {
+                    'string': 'deposit',
+                    'weight': 1
+                },
+                {
+                    'string': 'balance',
                     'weight': 1
                 },
             ],

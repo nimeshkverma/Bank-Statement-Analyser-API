@@ -183,16 +183,6 @@ class StandardCharteredBankStatementsA(object):
             'pdf_text_start_date'].month != 12 else self.stats['pdf_text_start_date'].year + 1
         return datetime.datetime(year, month, day)
 
-    def __min_date(self):
-        if self.stats['end_date'].day <= MAX_START_DAY_OF_MONTH:
-            return self.stats['end_date']
-        day = 1
-        month = self.stats['end_date'].month + \
-            1 if self.stats['end_date'].month != 12 else 1
-        year = self.stats['end_date'].year if self.stats[
-            'end_date'].month != 12 else self.stats['end_date'].year + 1
-        return datetime.datetime(year, month, day)
-
     def __max_date(self):
         if self.stats['pdf_text_end_date'].day >= MIN_END_DAY_OF_MONTH:
             return self.stats['pdf_text_end_date']

@@ -17,17 +17,23 @@ from IDFC_bank_statements_service import IDFCBankStatements
 from Andra_bank_statements_a_service import AndraBankStatementsA
 from Andra_bank_statements_b_service import AndraBankStatementsB
 from Bank_of_Baroda_bank_statements_a_service import BankOfBarodaBankStatementsA
+from Bank_of_India_bank_statements_a_service import BankOfIndiaBankStatementsA
 from CITI_bank_statements_a_service import CITIBankStatementsA
 from CITI_bank_statements_b_service import CITIBankStatementsB
 from Canara_bank_statements_a_service import CanaraBankStatementsA
 from Canara_bank_statements_b_service import CanaraBankStatementsB
+from Central_Bank_of_India_bank_statements_a_service import CentralBankOfIndiaBankStatementsA
 from Corporation_bank_statements_a_service import CorporationBankStatementsA
 from IndianOverseas_bank_statements_service import IndianOverseasStatementsA
 from Indian_bank_statements_a_service import IndianBankStatementsA
 from IndusInd_bank_statements_a_service import IndusIndBankStatementsA
 from IndusInd_bank_statements_b_service import IndusIndBankStatementsB
+from Karur_Vyasa_bank_statements_a_service import KarurVyasaBankStatementsA
+from Karur_Vyasa_bank_statements_b_service import KarurVyasaBankStatementsB
 from OrientalBankOfCommerce_bank_statements_a_service import OrientalBankOfCommerceBankStatementsA
 from PunjabNational_bank_statements_a_service import PunjabNationalBankStatementsA
+from StandardChartered_bank_statements_a_service import StandardCharteredBankStatementsA
+from StandardChartered_bank_statements_b_service import StandardCharteredBankStatementsB
 from Union_bank_statements_a_service import UnionBankStatementsA
 from Yes_bank_statements_a_service import YesBankStatementsA
 
@@ -216,6 +222,43 @@ class BankIdentifier(object):
                 'table_headers': None,
                 'table_dimensions': None,
             },
+            'boi_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'cbi_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'karur_vyasa_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'karur_vyasa_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'standard_chartered_a': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+            'standard_chartered_b': {
+                'keywords': None,
+                'regex_words': None,
+                'table_headers': None,
+                'table_dimensions': None,
+            },
+
         }
         self.score = dict()
         self.__get_likelihood()

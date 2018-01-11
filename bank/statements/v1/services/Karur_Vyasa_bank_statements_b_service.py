@@ -106,7 +106,7 @@ class KarurVyasaBankStatementsB(object):
         pdf_dates = []
         try:
             from_to_string_date_list = re.findall(
-                r'for\s*the\s*period\s*(\d{2}/\d{2}/\d{4})\s*to\s*(\d{2}/\d{2}/\d{4})', self.pdf_text)[0]
+                r'Specify\s*Period\s*(\d{2}-[a-zA-Z]{3}-\d{4})\s*(\d{2}-[a-zA-Z]{3}-\d{4})', self.pdf_text)[0]
             for date_string in from_to_string_date_list:
                 pdf_dates.append(date_string)
         except Exception as e:
