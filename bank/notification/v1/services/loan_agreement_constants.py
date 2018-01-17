@@ -59,7 +59,7 @@ LOAN_AGREEMENT_PAGE_DATA = {
                        'loan_tenure',
                        'loan_purpose',
                        'loan_emi_start_date',
-                       'loan_emi_emi_date',
+                       'loan_emi_end_date',
                        'loan_emi',
                        'processing_fees',
                        'processing_fees_gst',
