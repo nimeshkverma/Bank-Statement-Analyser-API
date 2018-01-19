@@ -39,10 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'django_ses',
     'rest_framework',
     'statements.apps.StatementsConfig',
     'common.apps.CommonConfig',
+    'cibil.apps.CibilConfig',
+    'notification.apps.NotificationConfig',
 ]
+
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
@@ -173,21 +177,25 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_IMPORTS = [
+CELERY_IMPORTS = [
     "statements.v1.tasks",
+    "notification.v1.tasks",
+    "cibil.v1.tasks",
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-DEFAULT_FROM_EMAIL = 'upwardstech@gmail.com'
-SERVER_EMAIL = 'SERVER_EMAIL'
 RECIEVER_EMAILS = [
     'RECIEVER_EMAILS1',
     'RECIEVER_EMAILS2'
 ]
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'EMAIL_HOST_USER'
-EMAIL_HOST_PASSWORD = 'EMAIL_HOST_PASSWORD'
-EMAIL_USE_TLS = True
+
+EMAIL_BACKEND = 'EMAIL_BACKEND'
+DEFAULT_FROM_EMAIL = 'DEFAULT_FROM_EMAIL'
+SERVER_EMAIL = 'SERVER_EMAIL'
+AWS_SES_REGION_NAME = 'AWS_SES_REGION_NAME'
+AWS_SES_REGION_ENDPOINT = 'AWS_SES_REGION_ENDPOINT'
+
+AWS_ACCESS_KEY_ID = 'AWS_ACCESS_KEY_ID'
+AWS_SECRET_ACCESS_KEY = 'AWS_SECRET_ACCESS_KEY/Q1/Uoyi9S+9eY+E5mZvpvWG'
 
 S3_URL = "S3_URL"
 

@@ -1,0 +1,130 @@
+<html lang="en">
+
+<head>
+    <title>Loan Agreement Page 9</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        #header-text {
+            font-size: 12px !important;
+        }
+        
+        #title-text {
+            font-size: 13px !important;
+            text-align: center;
+        }
+        
+        #body-text {
+            font-size: 12px !important;
+        }
+        
+        #footer-text {
+            font-size: 11px !important;
+            font-weight: bold;
+            background-color: #FFFF00;
+        }
+        
+        #body-field-text {
+            font-size: 12px !important;
+            display: inline-block;
+            text-decoration: none;
+            border-bottom: 1px solid;
+        }
+        
+        span {
+            font-size: 12px !important;
+            display: inline-block;
+            text-decoration: none;
+            border-bottom: 1px solid;
+        }
+        
+        br {
+            line-height:1px !important;
+        }
+        
+        .first-indent {
+            margin-left: 37px;
+        }
+        
+        .second-indent {
+            margin-left: 75px;
+        }
+        
+        .third-indent {
+            margin-left: 112px;
+        }
+        
+        .fourth-indent {
+            margin-left: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div class="pull-left">
+                <div id="header-text"><strong>Bajrang Investments Private Limited</strong></div>
+            </div>
+            <div class="pull-right">
+                <img align="left" alt="" src="https://s3-us-west-2.amazonaws.com/upwardsimages/upwards_logo.png" width="300" style="max-width: 84px;padding-bottom: 0;display: inline !important;vertical-align: bottom;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="mcnImage">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 col-lg-offset-3 text-center">
+                <div id="title-text">
+                    <p><strong>LOAN DETAILS</strong></p>
+                </div>
+            </div>
+        </div>
+        <div id="body-text">
+            <p><strong>Loan Application No:</strong></p>
+            <p>Name of the Borrower: {{borrower_full_name}}</p>
+            <p>Name of the Co-Borrower: ____________________________ <strong> &lt;To be filled only if co-borrower/guarantor is applicable&gt;</strong></p>
+            <p>Loan Amount: {{loan_amount}}</p>
+            <p><em>(Note: The loan amount approved may be lower than the amount applied by you on our app if this is your first loan relationship with us)</em></p>
+            <p>Interest Rate (Fixed Rate): <strong>{{interest_rate_per_tenure}}% (flat, per month)</strong></p>
+            <p>Loan Purpose: {{loan_purpose}}</p>
+            <p>Loan Tenure: <strong>{{loan_tenure}}</strong></p>
+            <p>Loan Type: EMI-Based term loan</p>
+            <p><strong><span>Calculation of Monthly Installment for Term Loan:</span></strong></p>
+            <p>The Monthly Installment will be charged using the Equated Monthly Instalment Model. You will have the same Monthly Instalment every month</p>
+            <p>EMI Scheme (Advance / Arrears): <strong>Arrears</strong></p>
+            <p>EMI Start Date: <strong>{{loan_emi_start_date}} (MM/DD/YYYY)</strong></p>
+            <p>EMI End Date: <strong>{{loan_emi_end_date}} (MM/DD/YYYY)</strong></p>
+            <p>EMI Amount: <strong>{{loan_emi}}</strong></p>
+            <p>Advance EMI Amount: <strong>N/A</strong></p>
+            <p>Processing Fees (2% of Loan Amount): <strong>{{processing_fees}}</strong></p>
+            <p>GST on Processing Fees (As specified by Government of India):
+                <strong>{{processing_fees_gst}}</strong></p>
+            <p><strong>Pre EMI Interest ({{pre_emi_days}} Days): Rs {{pre_emi_amount}}/-</strong></p>
+            <p><strong>LOAN CHARGES (All charges are non-refundable &amp; applicable post disbursement of loan)</strong></p>
+            <p>Date on which annual outstanding balance statement will be issued: <strong>31st May</strong></p>
+            <p>Details of Security/ Collateral: <strong>N/A</strong></p>
+            <p>Date of Signing: ___________________________</p>
+            <p>Place of Signing: ___________________________</p>
+            <p>NBFC's Branch: ___________________________</p>
+            <br>
+            <br>
+        </div>
+        <div class="page-footer">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <hr style="height:1px;" />
+                </div>
+            </div>
+            <div class="col-md-2 col-md-offset-5">
+                <div id="footer-text">Sign Here--> </div>
+            </div>
+            <br>
+            <br>
+            <br>
+        </div>
+    </div>
+</body>
+
+</html>

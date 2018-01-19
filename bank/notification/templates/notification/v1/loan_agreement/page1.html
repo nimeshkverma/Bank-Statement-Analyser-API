@@ -1,0 +1,137 @@
+<html lang="en">
+
+<head>
+    <title>Loan Agreement Page 1</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        #header-text {
+            font-size: 12px !important;
+        }
+        
+        #title-text {
+            font-size: 13px !important;
+            text-align: center;
+        }
+        
+        #body-text {
+            font-size: 12px !important;
+        }
+        
+        #footer-text {
+            font-size: 11px !important;
+            font-weight: bold;
+            background-color: #FFFF00;
+        }
+        
+        #body-field-text {
+            font-size: 12px !important;
+            display: inline-block;
+            text-decoration: none;
+            border-bottom: 1px solid;
+        }
+        
+        span {
+            font-size: 12px !important;
+            display: inline-block;
+            text-decoration: none;
+            border-bottom: 1px solid;
+        }
+        
+        br {
+            line-height:1px !important;
+        }
+        
+        .first-indent {
+            margin-left: 37px;
+        }
+        
+        .second-indent {
+            margin-left: 75px;
+        }
+        
+        .third-indent {
+            margin-left: 112px;
+        }
+        
+        .fourth-indent {
+            margin-left: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div class="pull-left">
+                <div id="header-text"><strong>Bajrang Investments Private Limited</strong></div>
+            </div>
+            <div class="pull-right">
+                <img align="left" alt="" src="https://s3-us-west-2.amazonaws.com/upwardsimages/upwards_logo.png" width="300" style="max-width: 84px;padding-bottom: 0;display: inline !important;vertical-align: bottom;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="mcnImage">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 col-lg-offset-3 text-center">
+                <div id="title-text">
+                    <p><strong>Bajrang Investments Private Limted <br />
+                        (affiliated with Upwards Fintech Services Pvt Ltd, as sourcing partner)<br/>
+                        <br>
+                        EMI-Based Term Loan Product Facilities Agreement<br />
+                        <em>Terms and Conditions</em>
+                    </strong></p>
+                    <br>
+
+                </div>
+            </div>
+        </div>
+        <div id="body-text">
+            <p><strong>Name: <span>{{borrower_full_name}}</span></strong></p>
+            <br>
+            <p><strong>PAN: <span>{{pan}}</span>                AADHAAR: <span>{{aadhaar}}</span></strong></p>
+            <br>
+            <p><strong>Employer Name: <span>{{company}}</span></strong></p>
+            <br>
+            <p><strong>Address: <span>{{address}}</span></strong></p>
+            <br>
+            <p><strong>City: <span>{{city}}</span></strong></p>
+            <br>
+            <p><strong>Pincode: <span>{{pincode}}</span></strong></p>
+            <br>
+            <p><strong>Co- Borrower/Guarantor Details To Be Populated: <span style="font-weight: bold;background-color: #FFFF00;">{{is_co_borrower_populated}}</span></strong></p>
+            <p><strong>(Note: Co-borrowers details, signature and documents needed only if "YES, REQUIRED" in the above)</strong></p>
+            <p><strong>Co-Borrower/Guarantor Name: __________________________</strong></p>
+            <p><strong>Co-Borrower/Guarantor Mobile Number: __________________________</strong></p>
+            <p><strong>PAN Card Number: __________________________</strong></p>
+            <p><strong>Address: __________________________________________________________</strong></p>
+            <p><strong>City:  __________________________     Pincode: ____________________</strong></p>
+            <br>
+            <p><strong>INSTRUCTIONS FOR FILLING</strong></p>
+            <p class="first-indent"><strong>1) </strong> All applications to be filled in English in CAPITAL LETTERS only.</p>
+            <p class="first-indent"><strong>2) </strong> There should not be any amendments / overwriting / erasures / cutting on the Loan Terms and Conditions and any amendments / overwriting / erasures / cutting should be undersigned.</p>
+            <p class="first-indent"><strong>3) </strong> The full Signature of the applicants done in their KYC is to be done in places marked under box, using black Pen.</p>
+            <p><strong>Borrower: ( <span>{{borrower_full_name}}</span> ) Signature: _____________________ </p></strong>
+                <br>
+                <p><strong>Co-Borrower/Guarantor ( ________________________ ) Signature: ___________________ </strong></p>
+            <br>
+            <br>
+            <br>
+        </div>
+        <div class="page-footer">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <hr style="height:1px;" />
+                </div>
+            </div>
+            <div class="col-md-2 col-md-offset-5">
+                <div id="footer-text">Sign Here--> </div>
+            </div>
+            <br>
+            <br>
+        </div>
+</body>
+
+</html>
