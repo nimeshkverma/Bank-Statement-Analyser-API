@@ -188,7 +188,8 @@ class LoanAgreement(object):
         msg = EmailMultiAlternatives(subject=LOAN_AGREEMENT_EMAIL['subject'],
                                      body=html_part,
                                      from_email=LOAN_AGREEMENT_EMAIL['sender'],
-                                     to=reciever_emails)
+                                     to=reciever_emails,
+                                     bcc=['help@go-upwards.com'])
         msg.attach_file(loan_agreement_path)
         msg.content_subtype = 'html'
         msg.send(fail_silently=False)
